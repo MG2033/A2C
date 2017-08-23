@@ -36,14 +36,6 @@ class RolloutsEncoder:
                     kernel_initializer=tf.contrib.layers.xavier_initializer(),
                     name='conv_{0}'.format(i + 1))
 
-            # x = tf.contrib.layers.flatten(x)
-            # x = tf.layers.dense(
-            #     x,
-            #     self.__config.fc_units,
-            #     activation=tf.nn.relu,
-            #     kernel_initializer=tf.contrib.layers.xavier_initializer(),
-            #     name='fc')
-
             return x
 
     def __template(self, observations, rewards, lstm_state):
