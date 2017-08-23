@@ -1,7 +1,8 @@
-from gp.i2a.rollouts_encoder import RolloutsEncoder
-from gp.i2a.i2a_config import I2AConfig
-import tensorflow as tf
 import numpy as np
+import tensorflow as tf
+
+from gp.configs.i2a_config import I2AConfig
+from gp.i2a.rollouts_encoder import RolloutsEncoder
 
 obs_placeholder = tf.placeholder(tf.float32, [4, 5, 15, 19, 3])
 rewards_placeholder = tf.placeholder(tf.float32, [4, 5, 1])
