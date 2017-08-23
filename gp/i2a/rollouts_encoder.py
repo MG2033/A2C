@@ -15,15 +15,15 @@ class RolloutsEncoder:
         self.__rollouts_observations = rollouts_observations
         self.__rollouts_rewards = rollouts_rewards
 
-        self.__build_model()
+        self.rollout_encoding = self.__build_model()
 
-    def cnn_encoder(self, x):
+    def __cnn_encoder(self, x):
         """
         a cnn encoder block with fc layer
         :param x: input tensor of shape: [actions_num, frame_w, frame_h, frame_c]
         :return: output tensor of shape [actions_num, 512]
         """
-        with tf.variable_scope('cnn_encoder'):
+        with tf.variable_scope('__cnn_encoder'):
             for i, (kernals_num, kernals_size, strides) in enumerate(zip(self.__config.cnn_kernals_num, self.__config.cnn_kernal_sizes, self.__config.cnn_strides)):
                 x = tf.layers.conv2d(
                     x,
@@ -54,15 +54,33 @@ class RolloutsEncoder:
         :param lstm_state: input tensor of shape: [2, actions_num, 512]
         :return: the output and the lstm hidden state
         """
-        lstm_state = tf.contrib.rnn.LSTMStateTuple(lstm_state[0], lstm_state[1])
-
-        encoded_observations = self.cnn_encoder(observations)
-
+        encoded_observations = self.__cnn_encoder(observations)
         encoded_observations_shape = encoded_observations.get_shape().as_list()
 
-        broadcasted_rewards = tf.ones([encoded_observations_shape[0], encoded_observations_shape[1], encoded_observations_shape[2], 1]) * rewards
+        broadcasted_rewards = tf.ones([encoded_observations_shape[0], encoded_observations_shape[1] * encoded_observations_shape[2]]) * rewards
+        broadcasted_rewards = tf.reshape(broadcasted_rewards, [encoded_observations_shape[0], encoded_observations_shape[1], encoded_observations_shape[2], 1])
 
-        lstm_input = tf.concat([encoded_observations, broadcasted_rewards], axis=0)
+        lstm_state = tf.contrib.rnn.LSTMStateTuple(lstm_state[0], lstm_state[1])
+        lstm_input = tf.contrib.layers.flatten(tf.concat([encoded_observations, broadcasted_rewards], axis=3))
+
+        lstm = tf.contrib.rnn.BasicLSTMCell(self.__config.lstm_units)
+        lstm_output, lstm_next_state = lstm(lstm_input, lstm_state)
+
+        return lstm_output, lstm_next_state
 
     def __build_model(self):
-        pass
+        net_unwrap = []
+        encoder_template = tf.make_template('encoder', self.__template)
+
+        lstm_state = tf.zeros([2, self.__config.actions_num, self.__config.lstm_units])
+        lstm_state = tf.contrib.rnn.LSTMStateTuple(lstm_state[0], lstm_state[1])
+
+        for i in range(self.__config.rollouts_steps):
+            step_output, lstm_state = encoder_template(self.__rollouts_observations[:, i], self.__rollouts_rewards[:, i], lstm_state)
+            net_unwrap.append(step_output)
+
+        with tf.name_scope('wrap_out'):
+            net_unwrap = tf.stack(net_unwrap)
+            self.__output = tf.transpose(net_unwrap, [1, 0, 2])
+
+        return self.__output

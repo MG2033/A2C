@@ -3,21 +3,23 @@ from gp.i2a.i2a_config import I2AConfig
 import tensorflow as tf
 import numpy as np
 
-input_placeholder = tf.placeholder(tf.float32, [5, 15, 19, 3])
+obs_placeholder = tf.placeholder(tf.float32, [4, 5, 15, 19, 3])
+rewards_placeholder = tf.placeholder(tf.float32, [4, 5, 1])
 
-input_arr = np.random.randint(0, 50, (5, 15, 19, 3))
+obs_arr = np.random.randint(0, 50, (4, 5, 15, 19, 3))
+r_arr = np.random.randint(0, 50, (4, 5, 1))
 
 config = I2AConfig()
 
-encoder = RolloutsEncoder(None, None, config)
+encoder = RolloutsEncoder(obs_placeholder, rewards_placeholder, config)
 
-output = encoder.cnn_encoder(input_placeholder)
+output = encoder.rollout_encoding
 
 init = tf.global_variables_initializer()
 sess = tf.Session()
 
 sess.run(init)
 
-out = sess.run(output, {input_placeholder: input_arr})
+out = sess.run(output, {obs_placeholder: obs_arr, rewards_placeholder: r_arr})
 
 print(out.shape)
