@@ -10,7 +10,7 @@ class ModelNetwork:
         self.initial_lstm_state = tf.placeholder(tf.float32, [2, None, 512], name='lstm_initial_state')
 
         with tf.name_scope('input'):
-            self.X = tf.placeholder(tf.float32, [None, self.config.truncated_time_steps, self.config.state_size],
+            self.x = tf.placeholder(tf.float32, [None, self.config.truncated_time_steps, self.config.state_size],
                                     name='X')
             self.y = tf.placeholder(tf.float32, [None, self.config.truncated_time_steps, self.config.state_size],
                                     name='y')
@@ -84,7 +84,7 @@ class ModelNetwork:
         lstm_state = tf.contrib.rnn.LSTMStateTuple(lstm_state[0], lstm_state[1])
         # lstm_state = None
         for i in range(self.config.truncated_time_steps):
-            next_state_out, reward_out, lstm_state = network_template(self.X[:, i, :], self.actions[:, i], lstm_state)
+            next_state_out, reward_out, lstm_state = network_template(self.x[:, i, :], self.actions[:, i], lstm_state)
 
             if self.config.predict_reward:
                 out = tf.concat([next_state_out, reward_out], 1)
@@ -109,9 +109,6 @@ class ModelNetwork:
             labels = self.y
 
         self.loss = tf.losses.mean_squared_error(labels, self.output)
-
-        relative_error = tf.losses.absolute_difference(labels, self.output) / labels
-        self.mean_relative_error = tf.reduce_mean(relative_error, [0, 1])
 
 
 
