@@ -2,12 +2,12 @@ import tensorflow as tf
 
 
 class BaseTrainer:
-    def __init__(self,sess,model,data,config,FLAGS):
-        self.model=model
-        self.config=config
-        self.sess=sess
-        self.data=data
-        self.FLAGS=FLAGS
+    def __init__(self, sess, model, data, config, FLAGS):
+        self.model = model
+        self.config = config
+        self.sess = sess
+        self.data = data
+        self.FLAGS = FLAGS
         self.cur_epoch_tensor = None
         self.cur_epoch_input = None
         self.cur_epoch_assign_op = None
@@ -100,7 +100,7 @@ class BaseTrainer:
         with tf.variable_scope('train-images-summary'):
             for tag in self.image_summary_tags:
                 self.summary_placeholders[tag] = tf.placeholder('float32',
-                                                                [None]+self.config.summary_image_shape,
+                                                                [None] + self.config.summary_image_shape,
                                                                 name=tag)
                 self.summary_ops[tag] = tf.summary.image(tag, self.summary_placeholders[tag],
                                                          max_outputs=self.config.max_images_to_visualize)

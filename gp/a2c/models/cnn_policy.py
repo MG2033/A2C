@@ -9,6 +9,7 @@ from gp.layers.dense import flatten, dense
 class CNNPolicy(BasePolicy):
     def __init__(self, sess, X_input, num_actions, reuse=False, is_training=True):
         BasePolicy.__init__(sess, X_input, reuse)
+        self.initial_state = []
 
         with tf.variable_scope("model", reuse=reuse):
             conv1 = conv2d('conv1', X_input, num_filters=32, kernel_size=(8, 8), padding='VALID', stride=(4, 4),
@@ -34,12 +35,17 @@ class CNNPolicy(BasePolicy):
             value_function = dense('value_function', fc4, output_dim=1,
                                    initializer=orthogonal_initializer(np.sqrt(1.0)), is_training=is_training)
 
-            self.value = value_function[:, 0]
-            self.action = noise_and_argmax(policy_logits)
+            with tf.name_scope('value'):
+                self.value = value_function[:, 0]
+
+            with tf.name_scope('action'):
+                self.action = noise_and_argmax(policy_logits)
 
     def step(self, observation, *_args, **_kwargs):
+        # Take a step using the model and return the predicted policy and value function
         action, value = self.sess.run([self.action, self.value], {self.X_input: observation})
         return action, value, []  # dummy state
 
     def value(self, observation, *_args, **_kwargs):
+        # Return the predicted value function for a given observation
         return self.sess.run(self.value, {self.X_input: observation})
