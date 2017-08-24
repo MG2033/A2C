@@ -28,7 +28,7 @@ def dense_p(name, x, w=None, output_dim=16, initializer=tf.contrib.layers.xavier
 
 def dense(name, x, w=None, output_dim=16, initializer=tf.contrib.layers.xavier_initializer(), l2_strength=0.0,
           bias=0.0,
-          activation=None, batchnorm_enabled=False, max_pool_enabled=True, dropout_keep_prob=1.0,
+          activation=None, batchnorm_enabled=False, dropout_keep_prob=1.0,
           is_training=True
           ):
     """
@@ -43,7 +43,6 @@ def dense(name, x, w=None, output_dim=16, initializer=tf.contrib.layers.xavier_i
     :param bias: (float) Amount of bias.
     :param activation: (tf.graph operator) The activation function applied after the convolution operation. If None, linear is applied.
     :param batchnorm_enabled: (boolean) for enabling batch normalization.
-    :param max_pool_enabled:  (boolean) for enabling max-pooling 2x2 to decrease width and height by a factor of 2.
     :param dropout_keep_prob: (float) for the probability of keeping neurons.
     :param is_training: (boolean) to diff. between training and testing (important for batch normalization and dropout) 
     :return out: The output of the layer. (N, H)
@@ -68,7 +67,16 @@ def dense(name, x, w=None, output_dim=16, initializer=tf.contrib.layers.xavier_i
         dense_o_dr = tf.nn.dropout(dense_a, dropout_keep_prob)
 
         dense_o = dense_o_dr
-        if max_pool_enabled:
-            dense_o = max_pool_2d(scope, dense_o_dr)
 
     return dense_o
+
+
+def flatten(x):
+    """
+    Flatten a (N,H,W,C) input into (N,D) output. Used for fully connected layers after conolution layers
+    :param x: (tf.tensor) representing input
+    :return: flattened output
+    """
+    all_dims_exc_first = np.prod([v.value for v in x.get_shape()[1:]])
+    o = tf.reshape(x, [-1, all_dims_exc_first])
+    return o

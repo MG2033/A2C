@@ -1,70 +1,80 @@
 import tensorflow as tf
-from gp.layers.utils import mse
+from gp.layers.utils import mse, openai_entropy
+from gp.utils.utils import find_trainable_variables, LearningRateDecay
 
 
-class Model(object):
-    def __init__(self, policy, ob_space, ac_space, nenvs, nsteps, nstack, num_procs,
-                 ent_coef=0.01, vf_coef=0.5, max_grad_norm=0.5, lr=7e-4,
-                 alpha=0.99, epsilon=1e-5, total_timesteps=int(80e6), lrschedule='linear'):
-        nact = ac_space.n
-        nbatch = nenvs * nsteps
+class Model:
+    def __init__(self, sess, policy, observation_space, action_space, num_envs, num_steps, num_stack,
+                 entropy_coef=0.01, value_function_coeff=0.5, max_gradient_norm=0.5,
+                 optimizer_params=None, total_timesteps=int(80e6),
+                 lr_decay_method='linear'):
+        self.num_actions = action_space.n
+        self.batch_size = num_envs * num_steps
+        self.num_steps = num_steps
+        self.img_height, self.img_width, self.num_classes = observation_space.shape
 
-        A = tf.placeholder(tf.int32, [nbatch])  # actions
-        ADV = tf.placeholder(tf.float32, [nbatch])  # advantage function
-        R = tf.placeholder(tf.float32, [nbatch])  # reward
-        LR = tf.placeholder(tf.float32, [])  # learning rate
+        self.num_stack = num_stack
+        self.X_input_train = None
+        self.X_input_step = None
+        self.gt_actions = None
+        self.advantage = None
+        self.reward = None
+        self.keep_prob = None
+        self.is_training = None
+        self.step_model = None
+        self.train_model = None
+        self.lr_decayer = None
+        self.policy = policy
+        self.sess = sess
+        self.vf_coeff = value_function_coeff
+        self.entropy_coeff = entropy_coef
+        self.max_grad_norm = max_gradient_norm
+        self.lr_decay_method = lr_decay_method
+        self.total_timesteps = total_timesteps
+        # RMSProp params = {'learning_rate': 7e-4, 'alpha': 0.99, 'epsilon': 1e-5}
+        self.learning_rate = optimizer_params['learning_rate']
+        self.alpha = optimizer_params['alpha']
+        self.epsilon = optimizer_params['epsilon']
 
-        step_model = policy(sess, ob_space, ac_space, nenvs, 1, nstack, reuse=False)
-        train_model = policy(sess, ob_space, ac_space, nenvs, nsteps, nstack, reuse=True)
+    def init_input(self):
+        with tf.name_scope('input'):
+            self.X_input_train = tf.placeholder(tf.uint8, (
+                self.batch_size, self.img_height, self.img_width, self.num_classes * self.num_stack))
+            self.X_input_step = tf.placeholder(tf.uint8, (
+                self.batch_size // self.num_steps, self.img_height, self.img_width, self.num_classes * self.num_stack))
 
-        neglogpac = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=train_model.pi, labels=A)
-        pg_loss = tf.reduce_mean(ADV * neglogpac)
-        vf_loss = tf.reduce_mean(mse(tf.squeeze(train_model.vf), R))
-        entropy = tf.reduce_mean(cat_entropy(train_model.pi))
-        loss = pg_loss - entropy * ent_coef + vf_loss * vf_coef
+            self.gt_actions = tf.placeholder(tf.int32, [self.batch_size])  # actions
+            self.advantage = tf.placeholder(tf.float32, [self.batch_size])  # advantage function
+            self.reward = tf.placeholder(tf.float32, [self.batch_size])  # reward
 
+            self.learning_rate = tf.placeholder(tf.float32, [])  # learning rate
+            self.keep_prob = tf.placeholder(tf.float32)  # dropout keep prob
+            self.is_training = tf.placeholder(tf.bool)  # is_training
+
+    def init_network(self):
+        # The model structure
+        self.step_model = self.policy(self.sess, self.X_input_step, self.num_actions, reuse=False,
+                                      is_training=False)
+        self.train_model = self.policy(self.sess, self.X_input_train, self.num_actions, reuse=True,
+                                       is_training=self.is_training)
+
+        negative_log_prob_action = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=self.train_model.policy_logits,
+                                                                                  labels=self.gt_actions)
+        policy_gradient_loss = tf.reduce_mean(self.advantage * negative_log_prob_action)
+        value_function_loss = tf.reduce_mean(mse(tf.squeeze(self.train_model.vf), self.reward))
+        entropy = tf.reduce_mean(openai_entropy(self.train_model.pi))
+        loss = policy_gradient_loss - entropy * self.entropy_coeff + value_function_loss * self.vf_coeff
+
+        # Gradient Clipping
         params = find_trainable_variables("model")
         grads = tf.gradients(loss, params)
-        if max_grad_norm is not None:
-            grads, grad_norm = tf.clip_by_global_norm(grads, max_grad_norm)
+        if self.max_grad_norm is not None:
+            grads, grad_norm = tf.clip_by_global_norm(grads, self.max_grad_norm)
+
+        # Apply Gradients
         grads = list(zip(grads, params))
-        trainer = tf.train.RMSPropOptimizer(learning_rate=LR, decay=alpha, epsilon=epsilon)
-        _train = trainer.apply_gradients(grads)
+        trainer = tf.train.RMSPropOptimizer(learning_rate=self.learning_rate, decay=self.alpha, epsilon=self.epsilon)
+        trainer.apply_gradients(grads)
 
-        lr = Scheduler(v=lr, nvalues=total_timesteps, schedule=lrschedule)
-
-        def train(obs, states, rewards, masks, actions, values):
-            advs = rewards - values
-            for step in range(len(obs)):  # WHAT?
-                cur_lr = lr.value()
-            td_map = {train_model.X: obs, A: actions, ADV: advs, R: rewards, LR: cur_lr}
-            if states != []:
-                td_map[train_model.S] = states
-                td_map[train_model.M] = masks
-            policy_loss, value_loss, policy_entropy, _ = sess.run(
-                [pg_loss, vf_loss, entropy, _train],
-                td_map
-            )
-            return policy_loss, value_loss, policy_entropy
-
-        def save(save_path):
-            ps = sess.run(params)
-            make_path(save_path)
-            joblib.dump(ps, save_path)
-
-        def load(load_path):
-            loaded_params = joblib.load(load_path)
-            restores = []
-            for p, loaded_p in zip(params, loaded_params):
-                restores.append(p.assign(loaded_p))
-            ps = sess.run(restores)
-
-        self.train = train
-        self.train_model = train_model
-        self.step_model = step_model
-        self.step = step_model.step
-        self.value = step_model.value
-        self.initial_state = step_model.initial_state
-        self.save = save
-        self.load = load
-        tf.global_variables_initializer().run(session=sess)
+        self.lr_decayer = LearningRateDecay(v=self.learning_rate, nvalues=self.total_timesteps,
+                                            lr_decay_method=self.lr_decay_method)

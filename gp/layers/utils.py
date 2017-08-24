@@ -85,7 +85,7 @@ def softmax_entropy(p0):
 
 def mse(predicted, ground_truth):
     # Mean-squared error
-    return tf.reduce_mean(tf.square(predicted - ground_truth) / 2.)
+    return tf.square(predicted - ground_truth) / 2.
 
 
 def orthogonal_initializer(scale=1.0):
