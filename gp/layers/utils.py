@@ -83,14 +83,14 @@ def softmax_entropy(p0):
     return - tf.reduce_sum(p0 * tf.log(p0 + 1e-6), axis=1)
 
 
-def mse(pred, target):
+def mse(predicted, ground_truth):
     # Mean-squared error
-    return tf.square(pred - target) / 2.
+    return tf.reduce_mean(tf.square(predicted - ground_truth) / 2.)
 
 
-def ortho_init(scale=1.0):
+def orthogonal_initializer(scale=1.0):
     def _ortho_init(shape, dtype, partition_info=None):
-        # lasagne ortho init for tf
+        # Orthogonal Initializer that uses SVD. The unused variables are just for passing in tensorflow
         shape = tuple(shape)
         if len(shape) == 2:
             flat_shape = shape
