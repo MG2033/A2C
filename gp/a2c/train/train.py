@@ -1,15 +1,16 @@
-from gp.a2c.train.base_train import BaseTrainer
+from gp.base.base_train import BaseTrainer
 from gp.utils.utils import LearningRateDecay
+from gp.utils.utils import create_experiment_dirs
 import numpy as np
 import time
 from tqdm import tqdm
+from gp.configs.a2c_config import A2CConfig
 
 
 class Trainer(BaseTrainer):
-    def __init__(self, sess, env, model, num_iterations, r_discount_factor, max_to_keep, experiment_dir, is_train,
-                 cont_train, initial_learning_rate=7e-4, total_timesteps=int(80e6),
-                 lr_decay_method='linear'):
-        super().__init__(sess, model, max_to_keep, experiment_dir, is_train, cont_train)
+    def __init__(self, sess, env, model, r_discount_factor=0.99,
+                 lr_decay_method='linear', FLAGS=None):
+        super().__init__(sess, model, None, A2CConfig, FLAGS)
         self.train_policy = self.model.train_policy
         self.step_policy = self.model.step_policy
         self.env = env
@@ -27,9 +28,10 @@ class Trainer(BaseTrainer):
         self.__observation_update(env.reset())
 
         self.gamma = r_discount_factor
-        self.num_iterations = int(num_iterations)
+        self.num_iterations = int(self.config.num_iterations)
 
-        self.learning_rate_decayed = LearningRateDecay(v=initial_learning_rate, nvalues=total_timesteps,
+        self.learning_rate_decayed = LearningRateDecay(v=self.config.learning_rate,
+                                                       nvalues=self.num_iterations * self.config.unroll_time_steps * self.config.num_envs,
                                                        lr_decay_method=lr_decay_method)
 
     def build_model(self):
@@ -39,7 +41,7 @@ class Trainer(BaseTrainer):
 
     def train(self):
         tstart = time.time()
-        for iteration in tqdm(range(self.model.global_step_tensor.eval(self.sess), self.num_iterations + 1, 1)):
+        for iteration in tqdm(range(self.global_step_tensor.eval(self.sess), self.num_iterations + 1, 1)):
             obs, states, rewards, masks, actions, values = self.__rollout()
             policy_loss, value_loss, policy_entropy = self.__rollout_update(obs, states, rewards, masks, actions,
                                                                             values)
@@ -48,8 +50,8 @@ class Trainer(BaseTrainer):
             fps = int((iteration * self.num_steps * self.env.num_envs) / nseconds)
 
             # Update the Global step
-            self.model.global_step_assign_op.eval(session=self.sess, feed_dict={
-                self.model.global_step_input: self.model.global_step_tensor.eval(self.sess) + 1})
+            self.global_step_assign_op.eval(session=self.sess, feed_dict={
+                self.global_step_input: self.global_step_tensor.eval(self.sess) + 1})
         self.env.close()
 
     def __rollout_update(self, observations, states, rewards, masks, actions, values):

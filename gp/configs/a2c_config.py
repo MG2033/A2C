@@ -1,5 +1,6 @@
 from gp.a2c.models.cnn_policy import CNNPolicy
 from gp.a2c.envs.gym_env import GymEnv
+from gp.utils.utils import create_experiment_dirs
 
 
 class A2CConfig:
@@ -16,4 +17,10 @@ class A2CConfig:
     max_to_keep = 10
     experiment_dir = "exp1"
     is_train = True
-    cont_train = True
+    load = True
+
+    # Summaries Config
+    scalar_summary_tags = []
+    scalar_summary_tags.extend(['policy-loss', 'policy-entropy', 'value-function-loss', 'reward'])
+
+    summary_dir, checkpoint_dir = create_experiment_dirs('../../a2c/experiments/' + experiment_dir)

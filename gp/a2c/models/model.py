@@ -1,20 +1,19 @@
 import tensorflow as tf
 from gp.layers.utils import mse, openai_entropy
 from gp.utils.utils import find_trainable_variables
-from gp.a2c.models.base_model import BaseModel
+from gp.configs.a2c_config import A2CConfig
 
 
-class Model(BaseModel):
-    def __init__(self, sess, policy, observation_space, action_space, num_envs, num_steps, num_stack,
+class Model:
+    def __init__(self, sess, observation_space, action_space,
                  entropy_coef=0.01, value_function_coeff=0.5, max_gradient_norm=0.5,
                  optimizer_params=None):
-        super().__init__()
         self.num_actions = action_space.n
-        self.train_batch_size = num_envs * num_steps
-        self.num_steps = num_steps
+        self.train_batch_size = A2CConfig.num_envs * A2CConfig.unroll_time_steps
+        self.num_steps = A2CConfig.unroll_time_steps
         self.img_height, self.img_width, self.num_classes = observation_space.shape
 
-        self.num_stack = num_stack
+        self.num_stack = A2CConfig.num_stack
         self.actions = None
         self.advantage = None
         self.reward = None
@@ -32,7 +31,7 @@ class Model(BaseModel):
         self.entropy = None
         self.loss = None
         self.learning_rate = None
-        self.policy = policy
+        self.policy = A2CConfig.policy_class
         self.sess = sess
         self.vf_coeff = value_function_coeff
         self.entropy_coeff = entropy_coef

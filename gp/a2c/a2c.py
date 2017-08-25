@@ -9,27 +9,27 @@ from gp.configs.a2c_config import A2CConfig
 
 
 class A2C:
-    def __init__(self, num_envs, env_class=GymEnv, policy_class=CNNPolicy, num_steps=5, num_stack=4,
-                 num_iterations=4e6, env_name="SpaceInvaders", learning_rate=7e-4, r_discount_factor=0.99,
-                 seed=42, max_to_keep=10, experiment_dir="", is_train=True, cont_train=True):
+    def __init__(self):
         tf.reset_default_graph()
 
         gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.95)
         config = tf.ConfigProto(allow_soft_placement=True,
-                                intra_op_parallelism_threads=num_envs,
-                                inter_op_parallelism_threads=num_envs, gpu_options=gpu_options)
+                                intra_op_parallelism_threads=A2CConfig.num_envs,
+                                inter_op_parallelism_threads=A2CConfig.num_envs, gpu_options=gpu_options)
         config.gpu_options.allow_growth = True
         sess = tf.Session(config=config)
 
-        self.env = self.__make_all_environments(num_envs, env_class, env_name, seed)
-        self.model = Model(sess, policy_class, self.env.observation_space, self.env.action_space, num_envs,
-                           num_steps, num_stack,
+        self.env = self.__make_all_environments(A2CConfig.num_envs, A2CConfig.env_class, A2CConfig.env_name,
+                                                A2CConfig.env_seed)
+        self.model = Model(sess, self.env.observation_space, self.env.action_space,
                            optimizer_params={
-                               'learning_rate': learning_rate, 'alpha': 0.99, 'epsilon': 1e-5})
-        self.trainer = Trainer(sess, self.env, self.model, num_iterations, r_discount_factor=r_discount_factor,
-                               max_to_keep=max_to_keep, is_train=is_train, cont_train=cont_train,
-                               experiment_dir=experiment_dir, initial_learning_rate=learning_rate,
-                               total_timesteps=int(num_iterations * num_steps * num_envs))
+                               'learning_rate': A2CConfig.learning_rate, 'alpha': 0.99, 'epsilon': 1e-5})
+
+        print("\n\nBuilding the model...")
+        self.model.build()
+        print("Model is built successfully\n\n")
+
+        self.trainer = Trainer(sess, self.env, self.model)
 
     def train(self):
         print('Training...')
@@ -49,12 +49,5 @@ class A2C:
 
 
 if __name__ == '__main__':
-    a2c = A2C(A2CConfig.num_envs, env_class=A2CConfig.env_class, policy_class=A2CConfig.policy_class,
-              num_steps=A2CConfig.unroll_time_steps,
-              num_stack=A2CConfig.num_stack,
-              num_iterations=A2CConfig.num_iterations, env_name=A2CConfig.env_name,
-              seed=A2CConfig.env_seed, max_to_keep=A2CConfig.max_to_keep, experiment_dir=A2CConfig.experiment_dir,
-              is_train=A2CConfig.is_train, cont_train=A2CConfig.cont_train,
-              learning_rate=A2CConfig.learning_rate, r_discount_factor=A2CConfig.reward_discount_factor)
-
+    a2c = A2C()
     a2c.train()

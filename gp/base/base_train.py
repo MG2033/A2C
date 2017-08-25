@@ -18,13 +18,13 @@ class BaseTrainer:
         self.summary_placeholders = {}
         self.summary_ops = {}
         self.scalar_summary_tags = self.config.scalar_summary_tags
-        self.image_summary_tags = self.config.image_summary_tags
+        #self.image_summary_tags = self.config.image_summary_tags
 
         # init the global step , the current epoch and the summaries
         self.init_global_step()
         self.init_cur_epoch()
         self.init_summaries()
-        self.init_image_summary()
+        #self.init_image_summary()  This is a specific for a certain model.
         # To initialize all variables
         self.init = tf.group(tf.global_variables_initializer(), tf.local_variables_initializer())
         self.sess.run(self.init)
@@ -32,7 +32,7 @@ class BaseTrainer:
         self.saver = tf.train.Saver(max_to_keep=self.config.max_to_keep)
         self.summary_writer = tf.summary.FileWriter(self.config.summary_dir, self.sess.graph)
 
-        if self.config.load:
+        if self.config.load or (not self.config.is_train):
             self.load()
 
     def save(self):
