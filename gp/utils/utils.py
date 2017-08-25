@@ -39,6 +39,14 @@ def create_experiment_dirs(exp_dir):
         exit(-1)
 
 
+def create_list_dirs(input_dir, prefix_name, count):
+    dirs_path = []
+    for i in range(count):
+        dirs_path.append(input_dir + prefix_name + '-' + str(i))
+        create_dirs([input_dir + prefix_name + '-' + str(i)])
+    return dirs_path
+
+
 def set_all_global_seeds(i):
     try:
         tf.set_random_seed(i)

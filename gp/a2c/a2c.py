@@ -3,7 +3,6 @@ from gp.a2c.envs.gym_env import GymEnv
 from gp.a2c.envs.subproc_vec_env import *
 from gp.utils.utils import set_all_global_seeds
 from gp.a2c.models.model import Model
-from gp.a2c.models.cnn_policy import CNNPolicy
 from gp.a2c.train.train import Trainer
 from gp.configs.a2c_config import A2CConfig
 

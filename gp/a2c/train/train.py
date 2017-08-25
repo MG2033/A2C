@@ -1,10 +1,11 @@
 from gp.base.base_train import BaseTrainer
 from gp.utils.utils import LearningRateDecay
-from gp.utils.utils import create_experiment_dirs
+from gp.utils.utils import create_experiment_dirs, create_list_dirs
 import numpy as np
 import time
 from tqdm import tqdm
 from gp.configs.a2c_config import A2CConfig
+from gp.a2c.bench.summary_helper import SummaryHelper
 
 
 class Trainer(BaseTrainer):
@@ -16,6 +17,7 @@ class Trainer(BaseTrainer):
         self.env = env
         self.sess = sess
         self.num_steps = self.model.num_steps
+        self.cur_iteration = 0
 
         self.states = self.step_policy.initial_state
         self.dones = [False for _ in range(env.num_envs)]
@@ -34,17 +36,23 @@ class Trainer(BaseTrainer):
                                                        nvalues=self.num_iterations * self.config.unroll_time_steps * self.config.num_envs,
                                                        lr_decay_method=lr_decay_method)
 
-    def build_model(self):
-        # Build the neural network
-        self.model.init_input()
-        self.model.init_network()
+        self.enviroments_summarizer = SummaryHelper(sess,
+                                                    create_list_dirs(A2CConfig.summary_dir, 'env', A2CConfig.num_envs),
+                                                    self.summary_placeholders, self.summary_ops)
+
+        self.summaries_arr_dict = [{} for _ in range(env.num_envs)]
 
     def train(self):
         tstart = time.time()
+        loss_list = np.zeros(100, )
+        i = 0
         for iteration in tqdm(range(self.global_step_tensor.eval(self.sess), self.num_iterations + 1, 1)):
+            self.cur_iteration = iteration
+
             obs, states, rewards, masks, actions, values = self.__rollout()
-            policy_loss, value_loss, policy_entropy = self.__rollout_update(obs, states, rewards, masks, actions,
-                                                                            values)
+            loss, policy_loss, value_loss, policy_entropy = self.__rollout_update(obs, states, rewards, masks, actions,
+                                                                                  values)
+            loss_list[i] = loss
             # TODO Tensorboard logging of policy_loss, value_loss, policy_entropy,...etc.
             nseconds = time.time() - tstart
             fps = int((iteration * self.num_steps * self.env.num_envs) / nseconds)
@@ -52,6 +60,16 @@ class Trainer(BaseTrainer):
             # Update the Global step
             self.global_step_assign_op.eval(session=self.sess, feed_dict={
                 self.global_step_input: self.global_step_tensor.eval(self.sess) + 1})
+            i += 1
+
+            if not i % 100:
+                mean_loss = np.mean(loss_list)
+                print('Iteration:' + str(iteration) + '--loss:' + str(mean_loss))
+                i = 0
+
+            # Summary Helper is for all environments. Summary Writer is the main writer.
+            self.enviroments_summarizer.add_summary_all(self.cur_iteration, self.summaries_arr_dict, summaries_merged=None)
+
         self.env.close()
 
     def __rollout_update(self, observations, states, rewards, masks, actions, values):
@@ -67,11 +85,12 @@ class Trainer(BaseTrainer):
             # Leave it for now. It's for LSTM policy.
             feed_dict[self.model.S] = states
             feed_dict[self.model.M] = masks
-        policy_loss, value_loss, policy_entropy, _ = self.sess.run(
-            [self.model.policy_gradient_loss, self.model.value_function_loss, self.model.entropy, self.model.optimize],
+        loss, policy_loss, value_loss, policy_entropy, _ = self.sess.run(
+            [self.model.loss, self.model.policy_gradient_loss, self.model.value_function_loss, self.model.entropy,
+             self.model.optimize],
             feed_dict
         )
-        return policy_loss, value_loss, policy_entropy
+        return loss, policy_loss, value_loss, policy_entropy
 
     def __observation_update(self, observation):
         # Do frame-stacking here instead of the FrameStack wrapper to reduce IPC overhead
@@ -133,6 +152,11 @@ class Trainer(BaseTrainer):
             else:
                 rewards = self.__discount_with_dones(rewards, dones, self.gamma)
             mb_rewards[n] = rewards
+
+            np_rewards = np.array(rewards)
+            np_dones = np.array(dones)
+
+            self.summaries_arr_dict[n]['reward'] = np.mean(np_rewards[np_dones == 1])
 
         # Instead of (num_envs, time_steps). Make them num_envs*time_steps.
         mb_rewards = mb_rewards.flatten()

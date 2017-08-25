@@ -21,6 +21,8 @@ class A2CConfig:
 
     # Summaries Config
     scalar_summary_tags = []
-    scalar_summary_tags.extend(['policy-loss', 'policy-entropy', 'value-function-loss', 'reward'])
+
+    #for i in range(num_envs):
+    scalar_summary_tags.extend(['reward'])
 
     summary_dir, checkpoint_dir = create_experiment_dirs('../../a2c/experiments/' + experiment_dir)
