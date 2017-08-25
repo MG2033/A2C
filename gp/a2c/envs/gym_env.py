@@ -17,10 +17,10 @@ class GymEnv(BaseEnv):
         return env
 
     def step(self, data):
-        return self.env.step(data)
+        return self._monitor_step(self.env.step(data))
 
     def reset(self):
-        return self.env.reset()
+        return self._monitor_reset(self.env.reset())
 
     def get_action_space(self):
         return self.env.action_space

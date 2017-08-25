@@ -36,9 +36,9 @@ class Trainer(BaseTrainer):
                                                        nvalues=self.num_iterations * self.config.unroll_time_steps * self.config.num_envs,
                                                        lr_decay_method=lr_decay_method)
 
-        self.enviroments_summarizer = EnvSummaryLogger(sess,
-                                                       create_list_dirs(A2CConfig.summary_dir, 'env', A2CConfig.num_envs),
-                                                       self.summary_placeholders, self.summary_ops)
+        self.env_summary_logger = EnvSummaryLogger(sess,
+                                                   create_list_dirs(A2CConfig.summary_dir, 'env', A2CConfig.num_envs),
+                                                   self.summary_placeholders, self.summary_ops)
 
         self.summaries_arr_dict = [{} for _ in range(env.num_envs)]
 
@@ -67,8 +67,9 @@ class Trainer(BaseTrainer):
                 print('Iteration:' + str(iteration) + '--loss:' + str(mean_loss))
                 i = 0
 
-            # Summary Helper is for all environments. Summary Writer is the main writer.
-            self.enviroments_summarizer.add_summary_all(self.cur_iteration, self.summaries_arr_dict, summaries_merged=None)
+            # Summary Logger is for all environments. Summary Writer is the main writer.
+            self.summaries_arr_dict = self.env.monitor()
+            self.env_summary_logger.add_summary_all(self.cur_iteration, self.summaries_arr_dict, summaries_merged=None)
 
         self.env.close()
 
@@ -151,10 +152,6 @@ class Trainer(BaseTrainer):
             else:
                 rewards = self.__discount_with_dones(rewards, dones, self.gamma)
             mb_rewards[n] = rewards
-            np_rewards = np.array(rewards)
-            np_dones = np.array(dones)
-            print(np_rewards[np_dones == 1])
-            self.summaries_arr_dict[n]['reward'] = np.mean(np_rewards[np_dones == 1])
 
         # Instead of (num_envs, time_steps). Make them num_envs*time_steps.
         mb_rewards = mb_rewards.flatten()
