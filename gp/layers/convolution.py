@@ -123,7 +123,7 @@ def conv2d(name, x, w=None, num_filters=16, kernel_size=(3, 3), padding='SAME', 
     :param is_training: (boolean) to diff. between training and testing (important for batch normalization and dropout)
     :return: The output tensor of the layer (N, H', W', C').
     """
-    with tf.name_scope(name) as scope:
+    with tf.variable_scope(name) as scope:
         conv_o_b = conv2d_p(scope, x=x, w=w, num_filters=num_filters, kernel_size=kernel_size, stride=stride,
                           padding=padding,
                           initializer=initializer, l2_strength=l2_strength, bias=bias)
@@ -171,7 +171,7 @@ def deconv2d(name, x, w=None, output_shape=None, kernel_size=(3, 3), padding='SA
     :param is_training: (boolean) to diff. between training and testing (important for batch normalization and dropout)
     :return out: The output of the layer. (output_shape[0], output_shape[1], output_shape[2], output_shape[3])
     """
-    with tf.name_scope(name) as scope:
+    with tf.variable_scope(name) as scope:
         conv_o_b = conv2d_transpose_p(name=scope, x=x, w=w, output_shape=output_shape, kernel_size=kernel_size,
                                     padding=padding, stride=stride,
                                     l2_strength=l2_strength,

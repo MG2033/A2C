@@ -10,12 +10,15 @@ class BaseTrainer:
         self.model = model
         self.summary_dir, self.checkpoint_dir = create_experiment_dirs(experiment_dir)
         self.checkpoint_dir = self.checkpoint_dir
-        self.build_model()
         # init the summaries
         self.summary_placeholders = {}
         self.summary_ops = {}
         self.scalar_summary_tags = self.model.scalar_summary_tags
         self.init_summaries()
+
+        print("\n\nBuilding the model...")
+        self.model.build()
+        print("Model is built successfully\n\n")
 
         # To initialize all variables
         self.init = tf.group(tf.global_variables_initializer(), tf.local_variables_initializer())
@@ -80,14 +83,6 @@ class BaseTrainer:
             print("Model loaded from the latest checkpoint successfully")
         else:
             print("\nFirst time to train..\n")
-
-    def build_model(self):
-        """
-        This will contain the building logic of any model and can be written in it all the model
-        Do what you want to do
-        :return:
-        """
-        raise NotImplementedError("build_model function is not implemented")
 
     def train(self):
         raise NotImplementedError("train function is not implemented")

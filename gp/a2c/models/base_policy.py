@@ -1,11 +1,12 @@
 class BasePolicy:
-    def __init__(self, sess, X_input, reuse=False):
+    def __init__(self, sess, input_shape, reuse=False):
         self.initial_state = []  # not stateful
         self.sess = sess
-        self.X_input = X_input
+        self.input_shape = input_shape
+        self.X_input = None
         self.reuse = reuse
-        self.value = None
-        self.action = None
+        self.value_s = None
+        self.action_s = None
 
     def step(self, observation):
         raise NotImplementedError("step function not implemented")

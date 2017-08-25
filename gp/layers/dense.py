@@ -47,7 +47,7 @@ def dense(name, x, w=None, output_dim=16, initializer=tf.contrib.layers.xavier_i
     :param is_training: (boolean) to diff. between training and testing (important for batch normalization and dropout) 
     :return out: The output of the layer. (N, H)
     """
-    with tf.name_scope(name) as scope:
+    with tf.variable_scope(name) as scope:
         dense_o_b = dense_p(name=scope, x=x, w=w, output_dim=output_dim, initializer=initializer,
                             l2_strength=l2_strength,
                             bias=bias)

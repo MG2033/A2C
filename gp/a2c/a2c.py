@@ -23,20 +23,29 @@ class A2C:
 
         self.env = self.__make_all_environments(num_envs, env_class, env_name, seed)
         self.model = Model(sess, policy_class, self.env.observation_space, self.env.action_space, num_envs,
-                           num_steps, num_stack, total_timesteps=int(num_iterations * num_steps * num_envs),
+                           num_steps, num_stack,
                            optimizer_params={
                                'learning_rate': learning_rate, 'alpha': 0.99, 'epsilon': 1e-5})
         self.trainer = Trainer(sess, self.env, self.model, num_iterations, r_discount_factor=r_discount_factor,
                                max_to_keep=max_to_keep, is_train=is_train, cont_train=cont_train,
-                               experiment_dir=experiment_dir)
+                               experiment_dir=experiment_dir, initial_learning_rate=learning_rate,
+                               total_timesteps=int(num_iterations * num_steps * num_envs))
 
     def train(self):
         print('Training...')
         self.trainer.train()
 
+    # The reason behind this design pattern is to pass the function handler when required after serialization
+    def __env_maker(self, env_class, env_name, i, seed):
+        def __make_env():
+            return env_class(env_name, i, seed)
+
+        return __make_env
+
     def __make_all_environments(self, num_envs=4, env_class=GymEnv, env_name="SpaceInvaders", seed=42):
         set_all_global_seeds(seed)
-        return SubprocVecEnv([env_class(env_name, i, seed) for i in range(num_envs)])
+
+        return SubprocVecEnv([self.__env_maker(env_class, env_name, i, seed) for i in range(num_envs)])
 
 
 if __name__ == '__main__':

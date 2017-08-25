@@ -5,8 +5,9 @@ import gym
 
 class GymEnv(BaseEnv):
     def __init__(self, env_name, id, seed):
-        BaseEnv.__init__(env_name, id)
+        super().__init__(env_name, id)
         self.seed = seed
+        self.make()
 
     def make(self):
         env = gym.make('{}NoFrameskip-v4'.format(self.env_name))
