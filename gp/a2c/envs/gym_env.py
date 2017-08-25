@@ -1,13 +1,17 @@
 from gp.a2c.envs.base_env import BaseEnv
 from gp.a2c.envs.atari_wrappers import wrap_deepmind
 import gym
+from gym import wrappers
 
 
 class GymEnv(BaseEnv):
-    def __init__(self, env_name, id, seed):
+    def __init__(self, env_name, id, seed, record=False, video_record_dir="", record_video_every=10):
         super().__init__(env_name, id)
         self.seed = seed
         self.make()
+        if record:
+            self.env = wrappers.Monitor(self.env, video_record_dir, resume=True,
+                                        video_callable=lambda count: count % record_video_every == 0)
 
     def make(self):
         env = gym.make(self.env_name)

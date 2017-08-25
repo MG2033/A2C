@@ -1,23 +1,35 @@
 import tensorflow as tf
-
+from gp.configs.a2c_config import A2CConfig
 
 class EnvSummaryLogger:
     """
     Helper class to summarize all environments at the same time on the same plots.
     """
 
-    def __init__(self, sess, summary_dirs, summary_placeholders, summary_ops):
+    def __init__(self, sess, summary_dirs):
         self.sess = sess
         self.summary_writer = [tf.summary.FileWriter(summary_dirs[i], self.sess.graph)
                                for i in range(len(summary_dirs))]
-        self.summary_placeholders = summary_placeholders
-        self.summary_ops = summary_ops
+        self.summary_placeholders = {}
+        self.summary_ops = {}
+        self.init_summaries()
+
+    def init_summaries(self):
+        """
+        Create the summary part of the graph
+        :return:
+        """
+        with tf.variable_scope('env-train-summaries'):
+            for tag in A2CConfig.env_summary_tags:
+                self.summary_placeholders[tag] = tf.placeholder('float32', None, name=tag)
+                self.summary_ops[tag] = tf.summary.scalar(tag, self.summary_placeholders[tag])
 
     def add_summary_all(self, step, summaries_arr_dict=None, summaries_merged=None):
         for i in range(len(summaries_arr_dict)):
-            self.__add_summary(i, step, summaries_arr_dict[i], summaries_merged)
+            if summaries_arr_dict[i]['reward'] != -1:
+                self.add_summary(i, step, summaries_arr_dict[i], summaries_merged)
 
-    def __add_summary(self, id, step, summaries_dict=None, summaries_merged=None):
+    def add_summary(self, id, step, summaries_dict=None, summaries_merged=None):
         """
         Add the summaries to tensorboard
         :param step:

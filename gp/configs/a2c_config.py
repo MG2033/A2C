@@ -4,7 +4,7 @@ from gp.utils.utils import create_experiment_dirs
 
 
 class A2CConfig:
-    num_envs = 5
+    num_envs = 4
     env_class = GymEnv
     env_name = "BreakoutNoFrameskip-v4"
     env_seed = 42
@@ -19,9 +19,12 @@ class A2CConfig:
     is_train = True
     load = True
 
-    # Summaries Config
-    scalar_summary_tags = []
-    #for i in range(num_envs):
-    scalar_summary_tags.extend(['reward'])
+    # If this equals -1, it means don't record
+    record_video_every = 10000
 
-    summary_dir, checkpoint_dir = create_experiment_dirs('../../a2c/experiments/' + experiment_dir)
+    # Summaries Config
+    scalar_summary_tags = ['loss']
+    env_summary_tags = ['reward', 'episode_length']
+
+    # Prepare Directories
+    experiment_dir, summary_dir, checkpoint_dir, output_dir = create_experiment_dirs('../../a2c/experiments/' + experiment_dir)

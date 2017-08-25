@@ -18,6 +18,7 @@ class Trainer(BaseTrainer):
         self.sess = sess
         self.num_steps = self.model.num_steps
         self.cur_iteration = 0
+        self.global_time_step = 0
 
         self.states = self.step_policy.initial_state
         self.dones = [False for _ in range(env.num_envs)]
@@ -37,39 +38,49 @@ class Trainer(BaseTrainer):
                                                        lr_decay_method=lr_decay_method)
 
         self.env_summary_logger = EnvSummaryLogger(sess,
-                                                   create_list_dirs(A2CConfig.summary_dir, 'env', A2CConfig.num_envs),
-                                                   self.summary_placeholders, self.summary_ops)
-
-        self.summaries_arr_dict = [{} for _ in range(env.num_envs)]
+                                                   create_list_dirs(A2CConfig.summary_dir, 'env', A2CConfig.num_envs))
 
     def train(self):
         tstart = time.time()
+        self.global_time_step = 0
         loss_list = np.zeros(100, )
-        i = 0
-        for iteration in tqdm(range(self.global_step_tensor.eval(self.sess), self.num_iterations + 1, 1)):
+        policy_entropy_list = np.zeros(100, )
+        fps_list = np.zeros(100, )
+        arr_idx = 0
+        start_iteration = self.global_step_tensor.eval(self.sess)
+        for iteration in tqdm(range(start_iteration, self.num_iterations + 1, 1), initial=start_iteration,
+                              total=self.num_iterations):
+
             self.cur_iteration = iteration
 
             obs, states, rewards, masks, actions, values = self.__rollout()
             loss, policy_loss, value_loss, policy_entropy = self.__rollout_update(obs, states, rewards, masks, actions,
                                                                                   values)
-            loss_list[i] = loss
+
+            # Calculate and Summarize
+            loss_list[arr_idx] = loss
             nseconds = time.time() - tstart
-            fps = int((iteration * self.num_steps * self.env.num_envs) / nseconds)
+            fps_list[arr_idx] = int((iteration * self.num_steps * self.env.num_envs) / nseconds)
+            policy_entropy_list[arr_idx] = policy_entropy
 
             # Update the Global step
             self.global_step_assign_op.eval(session=self.sess, feed_dict={
                 self.global_step_input: self.global_step_tensor.eval(self.sess) + 1})
-            i += 1
+            arr_idx += 1
 
-            if not i % 100:
+            if not arr_idx % 100:
                 mean_loss = np.mean(loss_list)
-                print('Iteration:' + str(iteration) + '--loss:' + str(mean_loss))
-                i = 0
+                mean_fps = np.mean(fps_list)
+                mean_pe = np.mean(policy_entropy_list)
+                print('Iteration:' + str(iteration) + ' - loss: ' + str(mean_loss)[:8] + ' - policy_entropy: ' + str(
+                    mean_pe)[:8] + ' - fps: ' + str(mean_fps))
+                arr_idx = 0
+        self.env.close()
 
-            # Summary Logger is for all environments. Summary Writer is the main writer.
-            self.summaries_arr_dict = self.env.monitor()
-            self.env_summary_logger.add_summary_all(self.cur_iteration, self.summaries_arr_dict, summaries_merged=None)
-
+    def test(self, total_timesteps):
+        for _ in tqdm(range(total_timesteps)):
+            actions, values, states = self.step_policy.step(self.observation_s, self.states, self.dones)
+            observation, rewards, dones, _ = self.env.step(actions)
         self.env.close()
 
     def __rollout_update(self, observations, states, rewards, masks, actions, values):
@@ -122,6 +133,12 @@ class Trainer(BaseTrainer):
 
             # Take a step in the real environment
             observation, rewards, dones, _ = self.env.step(actions)
+
+            # Tensorboard dump
+            summaries_arr_dict = self.env.monitor()
+            self.env_summary_logger.add_summary_all(self.global_time_step, summaries_arr_dict)
+            self.global_time_step += 1
+
             # States and Masks are for LSTM Policy
             self.states = states
             self.dones = dones

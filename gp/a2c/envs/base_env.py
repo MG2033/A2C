@@ -4,7 +4,8 @@ class BaseEnv:
         self.rank = id
         self.env = None
         self.rewards = []
-        self.summaries_dict = {'reward': 0}
+        self.summaries_dict = {'reward': 0, 'episode_length': 0}
+        self.episode_length = 0
 
     def make(self):
         raise NotImplementedError("make method is not implemented")
@@ -24,12 +25,16 @@ class BaseEnv:
     def _monitor_step(self, state):
         observation, reward, done, info = state
         self.rewards.append(reward)
+        self.episode_length += 1
+        self.summaries_dict['reward'] = -1
         if done:
             self.summaries_dict['reward'] = sum(self.rewards)
-            self.rewards = [reward]
+            self.summaries_dict['episode_length'] = self.episode_length
+            self.rewards = []
+            self.episode_length = 0
         return state
 
     def _monitor_reset(self, state):
-        self.rewards = [0]
-        self.summaries_dict['reward'] = sum(self.rewards)
+        self.rewards = []
+        self.episode_length = 0
         return state

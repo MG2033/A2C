@@ -5,6 +5,8 @@ from gp.utils.utils import set_all_global_seeds
 from gp.a2c.models.model import Model
 from gp.a2c.train.train import Trainer
 from gp.configs.a2c_config import A2CConfig
+from gp.a2c.bench.env_summary_logger import EnvSummaryLogger
+from gp.utils.utils import create_list_dirs
 
 
 class A2C:
@@ -32,21 +34,35 @@ class A2C:
 
     def train(self):
         print('Training...')
-        self.trainer.train()
+        try:
+            self.trainer.train()
+        except KeyboardInterrupt:
+            self.trainer.save()
+            self.env.close()
 
-    # The reason behind this design pattern is to pass the function handler when required after serialization
+    def test(self, total_timesteps):
+        print('Testing...')
+        try:
+            self.trainer.test(total_timesteps=total_timesteps)
+        except KeyboardInterrupt:
+            self.env.close()
+
+    # The reason behind this design pattern is to pass the function handler when required after serialization.
     def __env_maker(self, env_class, env_name, i, seed):
         def __make_env():
-            return env_class(env_name, i, seed)
+            return env_class(env_name, i, seed, not A2CConfig.is_train or A2CConfig.record_video_every != -1,
+                             A2CConfig.output_dir, A2CConfig.record_video_every)
 
         return __make_env
 
     def __make_all_environments(self, num_envs=4, env_class=GymEnv, env_name="SpaceInvaders", seed=42):
         set_all_global_seeds(seed)
 
-        return SubprocVecEnv([self.__env_maker(env_class, env_name, i, seed) for i in range(num_envs)])
+        return SubprocVecEnv(
+            [self.__env_maker(env_class, env_name, i, seed) for i in range(num_envs)])
 
 
 if __name__ == '__main__':
     a2c = A2C()
     a2c.train()
+    #a2c.test(total_timesteps=1000)

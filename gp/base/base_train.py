@@ -36,6 +36,7 @@ class BaseTrainer:
             self.load()
 
     def save(self):
+        print("Saving model...")
         self.saver.save(self.sess, self.config.checkpoint_dir, self.global_step_tensor)
         print("Model saved")
 

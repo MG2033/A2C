@@ -65,25 +65,26 @@ class Model:
         self.train_policy = self.policy(self.sess, self.X_input_train_shape, self.num_actions, reuse=True,
                                         is_training=self.is_training)
 
-        negative_log_prob_action = tf.nn.sparse_softmax_cross_entropy_with_logits(
-            logits=self.train_policy.policy_logits,
-            labels=self.actions)
-        self.policy_gradient_loss = tf.reduce_mean(self.advantage * negative_log_prob_action)
-        self.value_function_loss = tf.reduce_mean(mse(tf.squeeze(self.train_policy.value_function), self.reward))
-        self.entropy = tf.reduce_mean(openai_entropy(self.train_policy.policy_logits))
-        self.loss = self.policy_gradient_loss - self.entropy * self.entropy_coeff + self.value_function_loss * self.vf_coeff
+        with tf.variable_scope('train_output'):
+            negative_log_prob_action = tf.nn.sparse_softmax_cross_entropy_with_logits(
+                logits=self.train_policy.policy_logits,
+                labels=self.actions)
+            self.policy_gradient_loss = tf.reduce_mean(self.advantage * negative_log_prob_action)
+            self.value_function_loss = tf.reduce_mean(mse(tf.squeeze(self.train_policy.value_function), self.reward))
+            self.entropy = tf.reduce_mean(openai_entropy(self.train_policy.policy_logits))
+            self.loss = self.policy_gradient_loss - self.entropy * self.entropy_coeff + self.value_function_loss * self.vf_coeff
 
-        # Gradient Clipping
-        params = find_trainable_variables("model")
-        grads = tf.gradients(self.loss, params)
-        if self.max_grad_norm is not None:
-            grads, grad_norm = tf.clip_by_global_norm(grads, self.max_grad_norm)
+            # Gradient Clipping
+            params = find_trainable_variables("model")
+            grads = tf.gradients(self.loss, params)
+            if self.max_grad_norm is not None:
+                grads, grad_norm = tf.clip_by_global_norm(grads, self.max_grad_norm)
 
-        # Apply Gradients
-        grads = list(zip(grads, params))
-        optimizer = tf.train.RMSPropOptimizer(learning_rate=self.learning_rate, decay=self.alpha,
-                                              epsilon=self.epsilon)
-        self.optimize = optimizer.apply_gradients(grads)
+            # Apply Gradients
+            grads = list(zip(grads, params))
+            optimizer = tf.train.RMSPropOptimizer(learning_rate=self.learning_rate, decay=self.alpha,
+                                                  epsilon=self.epsilon)
+            self.optimize = optimizer.apply_gradients(grads)
 
     def build(self):
         self.init_input()
