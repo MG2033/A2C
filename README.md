@@ -12,5 +12,5 @@ cd GP
 pip install -e .
 ```
 
-- [A2C](a2c)
-- [RES](res)
+- [A2C](gp/a2c)
+- [RES](gp/res)
