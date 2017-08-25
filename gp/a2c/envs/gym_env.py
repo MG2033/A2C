@@ -10,9 +10,8 @@ class GymEnv(BaseEnv):
         self.make()
 
     def make(self):
-        env = gym.make('{}NoFrameskip-v4'.format(self.env_name))
+        env = gym.make(self.env_name)
         env.seed(self.seed + self.rank)
-        # TODO Logging
         self.env = wrap_deepmind(env)
         return env
 

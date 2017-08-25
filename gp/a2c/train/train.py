@@ -53,7 +53,6 @@ class Trainer(BaseTrainer):
             loss, policy_loss, value_loss, policy_entropy = self.__rollout_update(obs, states, rewards, masks, actions,
                                                                                   values)
             loss_list[i] = loss
-            # TODO Tensorboard logging of policy_loss, value_loss, policy_entropy,...etc.
             nseconds = time.time() - tstart
             fps = int((iteration * self.num_steps * self.env.num_envs) / nseconds)
 
