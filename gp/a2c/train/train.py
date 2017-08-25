@@ -2,6 +2,7 @@ from gp.a2c.train.base_train import BaseTrainer
 from gp.utils.utils import LearningRateDecay
 import numpy as np
 import time
+from tqdm import tqdm
 
 
 class Trainer(BaseTrainer):
@@ -38,12 +39,11 @@ class Trainer(BaseTrainer):
 
     def train(self):
         tstart = time.time()
-        for iteration in range(self.model.global_step_tensor.eval(self.sess), self.num_iterations + 1, 1):
+        for iteration in tqdm(range(self.model.global_step_tensor.eval(self.sess), self.num_iterations + 1, 1)):
             obs, states, rewards, masks, actions, values = self.__rollout()
             policy_loss, value_loss, policy_entropy = self.__rollout_update(obs, states, rewards, masks, actions,
                                                                             values)
             # TODO Tensorboard logging of policy_loss, value_loss, policy_entropy,...etc.
-            print('Iteration ' + str(iteration) + '.')
             nseconds = time.time() - tstart
             fps = int((iteration * self.num_steps * self.env.num_envs) / nseconds)
 
