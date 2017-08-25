@@ -5,7 +5,7 @@ import numpy as np
 import time
 from tqdm import tqdm
 from gp.configs.a2c_config import A2CConfig
-from gp.a2c.bench.summary_helper import SummaryHelper
+from gp.a2c.bench.env_summary_logger import EnvSummaryLogger
 
 
 class Trainer(BaseTrainer):
@@ -36,9 +36,9 @@ class Trainer(BaseTrainer):
                                                        nvalues=self.num_iterations * self.config.unroll_time_steps * self.config.num_envs,
                                                        lr_decay_method=lr_decay_method)
 
-        self.enviroments_summarizer = SummaryHelper(sess,
-                                                    create_list_dirs(A2CConfig.summary_dir, 'env', A2CConfig.num_envs),
-                                                    self.summary_placeholders, self.summary_ops)
+        self.enviroments_summarizer = EnvSummaryLogger(sess,
+                                                       create_list_dirs(A2CConfig.summary_dir, 'env', A2CConfig.num_envs),
+                                                       self.summary_placeholders, self.summary_ops)
 
         self.summaries_arr_dict = [{} for _ in range(env.num_envs)]
 
@@ -122,7 +122,6 @@ class Trainer(BaseTrainer):
 
             # Take a step in the real environment
             observation, rewards, dones, _ = self.env.step(actions)
-
             # States and Masks are for LSTM Policy
             self.states = states
             self.dones = dones
@@ -152,10 +151,9 @@ class Trainer(BaseTrainer):
             else:
                 rewards = self.__discount_with_dones(rewards, dones, self.gamma)
             mb_rewards[n] = rewards
-
             np_rewards = np.array(rewards)
             np_dones = np.array(dones)
-
+            print(np_rewards[np_dones == 1])
             self.summaries_arr_dict[n]['reward'] = np.mean(np_rewards[np_dones == 1])
 
         # Instead of (num_envs, time_steps). Make them num_envs*time_steps.

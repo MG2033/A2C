@@ -1,7 +1,7 @@
 import tensorflow as tf
 
 
-class SummaryHelper:
+class EnvSummaryLogger:
     """
     Helper class to summarize all environments at the same time on the same plots.
     """
