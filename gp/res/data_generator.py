@@ -58,7 +58,7 @@ class GenerateData:
 
     def prepare_actions(self):
         self.actions = np.zeros(
-            (self.config.num_episodes, self.config.all_seq_length, self.config.action_dim))
+            (self.config.num_episodes, self.config.episode_length, self.config.action_dim))
         actions = np.int32(np.load(self.config.actions_path))
         np.random.shuffle(actions)
         self.actions[:, actions[:self.config.num_episodes]] = 1
