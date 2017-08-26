@@ -28,13 +28,14 @@ def create_experiment_dirs(exp_dir):
     summary_dir = experiment_dir + 'summaries/'
     checkpoint_dir = experiment_dir + 'checkpoints/'
     output_dir = experiment_dir + 'output/'
-    dirs = [summary_dir, checkpoint_dir]
+    test_dir = experiment_dir + 'test/'
+    dirs = [summary_dir, checkpoint_dir, output_dir, test_dir]
     try:
         for dir_ in dirs:
             if not os.path.exists(dir_):
                 os.makedirs(dir_)
         print("Experiment directories created")
-        return experiment_dir, summary_dir, checkpoint_dir, output_dir
+        return experiment_dir, summary_dir, checkpoint_dir, output_dir, test_dir
     except Exception as err:
         print("Creating directories error: {0}".format(err))
         exit(-1)

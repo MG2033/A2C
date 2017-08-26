@@ -22,7 +22,7 @@ class BaseEnv:
     def get_observation_space(self):
         raise NotImplementedError("get_observation_space method is not implemented")
 
-    def _monitor_step(self, state):
+    def _info_step(self, state):
         observation, reward, done, info = state
         self.rewards.append(reward)
         self.episode_length += 1
@@ -34,7 +34,10 @@ class BaseEnv:
             self.episode_length = 0
         return state
 
-    def _monitor_reset(self, state):
+    def _info_reset(self, state):
         self.rewards = []
         self.episode_length = 0
         return state
+
+    def monitor(self, is_monitor, is_train, video_record_dir="", record_video_every=10):
+        raise NotImplementedError("monitor method is not implemented")

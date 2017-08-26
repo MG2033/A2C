@@ -21,8 +21,11 @@ def worker(remote, env_fn_wrapper):
             break
         elif cmd == 'get_spaces':
             remote.send((env.get_action_space(), env.get_observation_space()))
-        elif cmd == 'monitor':
+        elif cmd == 'info':
             remote.send(env.summaries_dict)
+        elif cmd == 'monitor':
+            is_monitor, is_train, experiment_dir, record_video_every = data
+            env.monitor(is_monitor, is_train, experiment_dir, record_video_every)
         else:
             raise NotImplementedError
 
@@ -77,10 +80,14 @@ class SubprocVecEnv():
         for p in self.ps:
             p.join()
 
-    def monitor(self):
+    def info(self):
         for remote in self.remotes:
-            remote.send(('monitor', None))
+            remote.send(('info', None))
         return [remote.recv() for remote in self.remotes]
+
+    def monitor(self, is_monitor=True, is_train=True, experiment_dir="", record_video_every=10):
+        for remote in self.remotes:
+            remote.send(('monitor', (is_monitor, is_train, experiment_dir, record_video_every)))
 
     @property
     def num_envs(self):

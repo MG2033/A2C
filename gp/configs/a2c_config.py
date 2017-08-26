@@ -27,4 +27,5 @@ class A2CConfig:
     env_summary_tags = ['reward', 'episode_length']
 
     # Prepare Directories
-    experiment_dir, summary_dir, checkpoint_dir, output_dir = create_experiment_dirs('../../a2c/experiments/' + experiment_dir)
+    experiment_dir, summary_dir, checkpoint_dir, output_dir, test_dir = create_experiment_dirs(
+        '../../a2c/experiments/' + experiment_dir)

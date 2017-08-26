@@ -28,7 +28,7 @@ class Trainer(BaseTrainer):
         self.observation_s = np.zeros(
             (env.num_envs, self.model.img_height, self.model.img_width, self.model.num_classes * self.model.num_stack),
             dtype=np.uint8)
-        self.__observation_update(env.reset())
+        self.observation_s = self.__observation_update(env.reset(), self.observation_s)
 
         self.gamma = r_discount_factor
         self.num_iterations = int(self.config.num_iterations)
@@ -78,9 +78,21 @@ class Trainer(BaseTrainer):
         self.env.close()
 
     def test(self, total_timesteps):
+        states = self.step_policy.initial_state
+        dones = [False for _ in range(self.env.num_envs)]
+
+        observation_s = np.zeros(
+            (self.env.num_envs, self.model.img_height, self.model.img_width, self.model.num_classes * self.model.num_stack),
+            dtype=np.uint8)
+        observation_s = self.__observation_update(self.env.reset(), observation_s)
+
         for _ in tqdm(range(total_timesteps)):
-            actions, values, states = self.step_policy.step(self.observation_s, self.states, self.dones)
+            actions, values, states = self.step_policy.step(observation_s, states, dones)
             observation, rewards, dones, _ = self.env.step(actions)
+            for n, done in enumerate(dones):
+                if done:
+                    observation_s[n] *= 0
+            observation_s = self.__observation_update(observation, observation_s)
         self.env.close()
 
     def __rollout_update(self, observations, states, rewards, masks, actions, values):
@@ -103,10 +115,11 @@ class Trainer(BaseTrainer):
         )
         return loss, policy_loss, value_loss, policy_entropy
 
-    def __observation_update(self, observation):
+    def __observation_update(self, new_observation, old_observation):
         # Do frame-stacking here instead of the FrameStack wrapper to reduce IPC overhead
-        self.observation_s = np.roll(self.observation_s, shift=-1, axis=3)
-        self.observation_s[:, :, :, -1] = observation[:, :, :, 0]
+        updated_observation = np.roll(old_observation, shift=-1, axis=3)
+        updated_observation[:, :, :, -1] = new_observation[:, :, :, 0]
+        return updated_observation
 
     def __discount_with_dones(self, rewards, dones, gamma):
         discounted = []
@@ -135,7 +148,7 @@ class Trainer(BaseTrainer):
             observation, rewards, dones, _ = self.env.step(actions)
 
             # Tensorboard dump
-            summaries_arr_dict = self.env.monitor()
+            summaries_arr_dict = self.env.info()
             self.env_summary_logger.add_summary_all(self.global_time_step, summaries_arr_dict)
             self.global_time_step += 1
 
@@ -145,7 +158,7 @@ class Trainer(BaseTrainer):
             for n, done in enumerate(dones):
                 if done:
                     self.observation_s[n] *= 0
-            self.__observation_update(observation)
+            self.observation_s = self.__observation_update(observation, self.observation_s)
             mb_rewards.append(rewards)
         mb_dones.append(self.dones)
 
