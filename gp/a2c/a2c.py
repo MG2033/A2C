@@ -19,7 +19,7 @@ class A2C:
         sess = tf.Session(config=config)
 
         self.env = self.__make_all_environments(A2CConfig.num_envs, A2CConfig.env_class, A2CConfig.env_name,
-                                                A2CConfig.env_seed, A2CConfig.output_dir)
+                                                A2CConfig.env_seed)
         self.model = Model(sess, self.env.observation_space, self.env.action_space,
                            optimizer_params={
                                'learning_rate': A2CConfig.learning_rate, 'alpha': 0.99, 'epsilon': 1e-5})
@@ -63,7 +63,7 @@ class A2C:
 
         return __make_env
 
-    def __make_all_environments(self, num_envs=4, env_class=GymEnv, env_name="SpaceInvaders", seed=42, output_dir=""):
+    def __make_all_environments(self, num_envs=4, env_class=GymEnv, env_name="SpaceInvaders", seed=42):
         set_all_global_seeds(seed)
 
         return SubprocVecEnv(
