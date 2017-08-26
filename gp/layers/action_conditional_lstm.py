@@ -3,9 +3,9 @@ import tensorflow as tf
 
 class ActionLSTMCell(tf.nn.rnn_cell.BasicLSTMCell):
     def __init__(self, num_units, w_hv, w_hz, w_vh, w_va,
-                 activation=None, reuse=None):
+                 activation=None, reuse=None, scope=None):
         super(tf.nn.rnn_cell.BasicLSTMCell, self).__init__(_reuse=reuse)
-
+        self.scope = scope
         self._num_units = num_units
         self._activation = activation
 
@@ -16,7 +16,7 @@ class ActionLSTMCell(tf.nn.rnn_cell.BasicLSTMCell):
         self._w_va = w_va
 
     def __call__(self, x, h, a, scope=None):
-        with tf.variable_scope(self.scope or self.__class__.__name__):
+        with tf.variable_scope(self._scope or self.__class__.__name__):
             previous_memory, previous_output = h
 
             v = tf.matmul(self._w_vh, tf.transpose(previous_output, (1, 0))) * tf.matmul(self._w_va,
@@ -48,12 +48,12 @@ def actionlstm_cell(x, h, a, num_units, input_shape, action_dim,
         w_vh = tf.get_variable('w_vh', [2 * num_units, num_units], initializer=initializer)
         w_va = tf.get_variable('w_va', [2 * num_units, action_dim], initializer=initializer)
 
-        # init the cell
-        cell = ActionLSTMCell(num_units, w_hv, w_hz, w_vh, w_va, activation)
-        # call the cell
-        if h is None:
-            h = cell.zero_state(tf.shape(x)[0], tf.float32)
+    # init the cell
+    cell = ActionLSTMCell(num_units, w_hv, w_hz, w_vh, w_va, activation)
+    # call the cell
+    if h is None:
+        h = cell.zero_state(tf.shape(x)[0], tf.float32)
 
-        output, state = cell(x, h, a)
+    output, state = cell(x, h, a)
 
     return output, state
