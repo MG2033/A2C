@@ -15,7 +15,7 @@ class A2CConfig:
     learning_rate = 7e-4
     reward_discount_factor = 0.99
     max_to_keep = 10
-    experiment_dir = "exp1"
+    experiment_dir = "experiment_1"
     is_train = True
     load = True
 
