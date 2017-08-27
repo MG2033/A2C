@@ -37,7 +37,7 @@ class A2C:
                 self.env.monitor(is_monitor=True, is_train=False, experiment_dir=A2CConfig.experiment_dir,
                                  record_video_every=A2CConfig.record_video_every)
             self.trainer.train()
-        except:
+        except KeyboardInterrupt:
             print('Error occured..')
             self.trainer.save()
             self.env.close()
@@ -52,7 +52,7 @@ class A2C:
                 self.env.monitor(is_monitor=True, is_train=False, experiment_dir=A2CConfig.experiment_dir,
                                  record_video_every=10)
             self.trainer.test(total_timesteps=total_timesteps)
-        except:
+        except KeyboardInterrupt:
             print('Error occured..')
             self.env.close()
 
