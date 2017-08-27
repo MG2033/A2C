@@ -6,7 +6,6 @@ from gp.a2c.models.model import Model
 from gp.a2c.train.train import Trainer
 from gp.configs.a2c_config import A2CConfig
 
-
 class A2C:
     def __init__(self):
         tf.reset_default_graph()

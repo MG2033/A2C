@@ -207,7 +207,7 @@ def atrous_conv2d(name, x, w=None, num_filters=16, kernel_size=(3, 3), padding='
 
 
 def conv2d_transpose(name, x, w=None, output_shape=None, kernel_size=(3, 3), padding='SAME', stride=(1, 1), l2_strength=0.0,
-               bias=0.0, activation=None, batchnorm_enabled=False, max_pool_enabled=False, dropout_keep_prob=-1,
+               bias=0.0, activation=None, batchnorm_enabled=False, dropout_keep_prob=-1,
                is_training=True):
     """
     This block is responsible for a convolution transpose 2D followed by optional (non-linearity, dropout, max-pooling).
@@ -251,7 +251,13 @@ def conv2d_transpose(name, x, w=None, output_shape=None, kernel_size=(3, 3), pad
             conv_o_dr = conv_a
 
         conv_o = conv_o_dr
-        if max_pool_enabled:
-            conv_o = max_pool_2d(scope, conv_o_dr)
 
         return conv_o
+
+
+def load_conv_layer(bottom, name, pretrained_weights, pooling=False, trainable=True, l2_strength=0.0):
+    w = load_conv_filter(name, pretrained_weights, l2_strength, trainable=trainable)
+    biases = load_bias(name, pretrained_weights, trainable=trainable)
+    return conv2d(name, x=bottom, w=w, l2_strength=l2_strength, bias=biases, activation=tf.nn.relu,
+                  max_pool_enabled=pooling)
+
