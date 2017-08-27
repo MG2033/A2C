@@ -1,32 +1,33 @@
 from gp.layers.utils import *
-from gp.layers.pooling import max_pool_2d
 
 import tensorflow as tf
 
 
-def dense_p(name, x, w=None, output_dim=16, initializer=tf.contrib.layers.xavier_initializer(), l2_strength=0.0,
+def dense_p(name, x, w=None, output_dim=128, initializer=tf.contrib.layers.xavier_initializer(), l2_strength=0.0,
             bias=0.0):
     """
     Fully connected layer
     :param name: (string) The name scope provided by the upper tf.name_scope('name') as scope.
     :param x: (tf.tensor) The input to the layer (N, D).
-    :param w: (tf.tensor) Variable representing the pretrained weights
     :param output_dim: (integer) It specifies H, the output second dimension of the fully connected layer [ie:(N, H)]
     :param initializer: (tf.contrib initializer) The initialization scheme, He et al. normal or Xavier normal are recommended.
     :param l2_strength:(weight decay) (float) L2 regularization parameter.
-    :param bias: (float) Amount of bias.
+    :param bias: (float) Amount of bias. (if not float, it means pretrained bias)
     :return out: The output of the layer. (N, H)
     """
     n_in = x.get_shape()[-1].value
     with tf.variable_scope(name):
-        if not w:
+        if w == None:
             w = variable_with_weight_decay([n_in, output_dim], initializer, l2_strength)
-        b = tf.get_variable("layer_biases", [output_dim], tf.float32, tf.constant_initializer(bias))
-        output = tf.nn.bias_add(tf.matmul(x, w), b)
+        variable_summaries(w)
+        if isinstance(bias, float):
+            bias = tf.get_variable("layer_biases", [output_dim], tf.float32, tf.constant_initializer(bias))
+        variable_summaries(bias)
+        output = tf.nn.bias_add(tf.matmul(x, w), bias)
         return output
 
 
-def dense(name, x, w=None, output_dim=16, initializer=tf.contrib.layers.xavier_initializer(), l2_strength=0.0,
+def dense(name, x, w=None, output_dim=128, initializer=tf.contrib.layers.xavier_initializer(), l2_strength=0.0,
           bias=0.0,
           activation=None, batchnorm_enabled=False, dropout_keep_prob=1.0,
           is_training=True
@@ -36,7 +37,6 @@ def dense(name, x, w=None, output_dim=16, initializer=tf.contrib.layers.xavier_i
     Note that: "is_training" should be passed by a correct value based on being in either training or testing.
     :param name: (string) The name scope provided by the upper tf.name_scope('name') as scope.
     :param x: (tf.tensor) The input to the layer (N, D).
-    :param w: (tf.tensor) Variable representing the pretrained weights
     :param output_dim: (integer) It specifies H, the output second dimension of the fully connected layer [ie:(N, H)]
     :param initializer: (tf.contrib initializer) The initialization scheme, He et al. normal or Xavier normal are recommended.
     :param l2_strength:(weight decay) (float) L2 regularization parameter.
@@ -67,7 +67,6 @@ def dense(name, x, w=None, output_dim=16, initializer=tf.contrib.layers.xavier_i
         dense_o_dr = tf.nn.dropout(dense_a, dropout_keep_prob)
 
         dense_o = dense_o_dr
-
     return dense_o
 
 
