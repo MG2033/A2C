@@ -200,7 +200,7 @@ def atrous_conv2d(name, x, w=None, num_filters=16, kernel_size=(3, 3), padding='
     return conv_o
 
 
-def deconv2d(name, x, w=None, output_shape=None, kernel_size=(3, 3), padding='SAME', stride=(1, 1), l2_strength=0.0,
+def conv2d_transpose(name, x, w=None, output_shape=None, kernel_size=(3, 3), padding='SAME', stride=(1, 1), l2_strength=0.0,
                bias=0.0, activation=None, batchnorm_enabled=False, max_pool_enabled=False, dropout_keep_prob=1.0,
                is_training=True):
     """
