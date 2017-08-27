@@ -1,11 +1,14 @@
+import time
+
 class BaseEnv:
     def __init__(self, env_name, id):
         self.env_name = env_name
         self.rank = id
         self.env = None
         self.rewards = []
-        self.summaries_dict = {'reward': 0, 'episode_length': 0}
+        self.summaries_dict = {'reward': 0, 'episode_length': 0, 'step': 0}
         self.episode_length = 0
+        self.tstart = time.time()
 
     def make(self):
         raise NotImplementedError("make method is not implemented")
@@ -30,6 +33,7 @@ class BaseEnv:
         if done:
             self.summaries_dict['reward'] = sum(self.rewards)
             self.summaries_dict['episode_length'] = self.episode_length
+            self.summaries_dict['step'] = round(time.time() - self.tstart)
             self.rewards = []
             self.episode_length = 0
         return state

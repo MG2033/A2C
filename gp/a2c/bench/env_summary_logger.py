@@ -24,12 +24,12 @@ class EnvSummaryLogger:
                 self.summary_placeholders[tag] = tf.placeholder('float32', None, name=tag)
                 self.summary_ops[tag] = tf.summary.scalar(tag, self.summary_placeholders[tag])
 
-    def add_summary_all(self, step, summaries_arr_dict=None, summaries_merged=None):
+    def add_summary_all(self, summaries_arr_dict=None, summaries_merged=None):
         for i in range(len(summaries_arr_dict)):
             if summaries_arr_dict[i]['reward'] != -1:
-                self.add_summary(i, step, summaries_arr_dict[i], summaries_merged)
+                self.add_summary(i, summaries_arr_dict[i], summaries_merged)
 
-    def add_summary(self, id, step, summaries_dict=None, summaries_merged=None):
+    def add_summary(self, id, summaries_dict=None, summaries_merged=None):
         """
         Add the summaries to tensorboard
         :param step:
@@ -38,12 +38,12 @@ class EnvSummaryLogger:
         :return:
         """
         if summaries_dict is not None:
-            summary_list = self.sess.run([self.summary_ops[tag] for tag in summaries_dict.keys()],
+            summary_list = self.sess.run([self.summary_ops[tag] for tag in summaries_dict.keys() if tag != 'step'],
                                          {self.summary_placeholders[tag]: value for tag, value in
-                                          summaries_dict.items()})
+                                          summaries_dict.items() if tag != 'step'})
             for summary in summary_list:
-                self.summary_writer[id].add_summary(summary, step)
+                self.summary_writer[id].add_summary(summary, summaries_dict['step'])
             self.summary_writer[id].flush()
         if summaries_merged is not None:
-            self.summary_writer[id].add_summary(summaries_merged, step)
+            self.summary_writer[id].add_summary(summaries_merged, summaries_dict['step'])
             self.summary_writer[id].flush()

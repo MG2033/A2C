@@ -152,7 +152,7 @@ class Trainer(BaseTrainer):
 
             # Tensorboard dump
             summaries_arr_dict = self.env.info()
-            self.env_summary_logger.add_summary_all(self.global_time_step, summaries_arr_dict)
+            self.env_summary_logger.add_summary_all(summaries_arr_dict)
             self.global_time_step += 1
             self.global_time_step_assign_op.eval(session=self.sess, feed_dict={
                 self.global_time_step_input: self.global_time_step})
