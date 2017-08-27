@@ -4,6 +4,9 @@ import tensorflow as tf
 
 class ModelNetwork:
     def __init__(self, config):
+        """
+        :param config: configration object
+        """
         self.config = config
         self.summaries = None
         self.is_training = tf.placeholder(tf.bool, name='is_training')
@@ -84,7 +87,7 @@ class ModelNetwork:
             reshaped_drp4 = tf.reshape(drp5, [-1] + deconv_init_shape[1:])
 
         with tf.name_scope('decoder_1'):
-            h6 = tf.layers.conv2d_transpose(reshaped_drp4, 32, kernel_size=(4, 4), strides=(2, 2), padding='valid',
+            h6 = tf.layers.conv2d_transpose(reshaped_drp4, 32, kernel_size=(4, 4), strides=(2, 2), padding='SAME',
                                             kernel_initializer=tf.contrib.layers.xavier_initializer())
             bn6 = tf.layers.batch_normalization(h6, training=self.is_training)
             drp6 = tf.layers.dropout(tf.nn.relu(bn6), rate=self.config.dropout_rate, training=self.is_training,
@@ -99,13 +102,13 @@ class ModelNetwork:
 
         with tf.name_scope('decoder_3'):
             h8 = tf.layers.conv2d_transpose(drp7, 32, kernel_size=(6, 6), strides=(2, 2),
-                                            kernel_initializer=tf.contrib.layers.xavier_initializer(), padding='same')
+                                            kernel_initializer=tf.contrib.layers.xavier_initializer(), padding='SAME')
             bn8 = tf.layers.batch_normalization(h8, training=self.is_training)
             drp8 = tf.layers.dropout(tf.nn.relu(bn8), rate=self.config.dropout_rate, training=self.is_training,
                                      name='dropout')
 
         with tf.name_scope('decoder_4'):
-            h9 = tf.layers.conv2d_transpose(drp8, 64, kernel_size=(8, 8), strides=(2, 2), padding='same',
+            h9 = tf.layers.conv2d_transpose(drp8, 64, kernel_size=(8, 8), strides=(2, 2), padding='SAME',
                                             kernel_initializer=tf.contrib.layers.xavier_initializer())
             bn9 = tf.layers.batch_normalization(h9, training=self.is_training)
             drp9 = tf.layers.dropout(tf.nn.relu(bn9), rate=self.config.dropout_rate, training=self.is_training,
@@ -156,7 +159,8 @@ class ModelNetwork:
             if self.config.predict_reward:
                 reward_unwrap.append(reward_out)
                 # the resize is just temp sol until calculate conv_deconv stuff
-                net_unwrap.append(tf.image.resize_images(next_state_out, (256, 160)))
+                # net_unwrap.append(tf.image.resize_images(next_state_out, (256, 160)))
+                net_unwrap.append(next_state_out)
             else:
                 net_unwrap.append(next_state_out)
 

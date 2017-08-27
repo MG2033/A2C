@@ -3,6 +3,7 @@ import numpy as np
 from tqdm import tqdm
 import tensorflow as tf
 import gym
+
 FLAGS = tf.app.flags.FLAGS
 tf.app.flags.DEFINE_string('save_dir', "/shared/oabdelta/new-torcs-data/", """ directory to save to """)
 tf.app.flags.DEFINE_integer('episodes', 2500, """ number of episodes """)
@@ -11,10 +12,10 @@ tf.app.flags.DEFINE_integer('max_episode_len', 2000, """ number of episode steps
 
 
 class Collector:
-    def __init__(self, env_id,policy):
+    def __init__(self, env_id, policy):
         create_dirs([FLAGS.save_dir])
-        self.env =  gym.make(env_id)
-        self.action_dims= self.env.observation_space.n
+        self.env = gym.make(env_id)
+        self.action_dims = self.env.observation_space.n
         self.state_size = self.env.observation_space.shape
 
         self.states = np.zeros((FLAGS.episodes, FLAGS.episode_len + 1, self.state_size))
@@ -22,9 +23,7 @@ class Collector:
         self.actions = np.zeros((FLAGS.episodes, FLAGS.episode_len))
         self.action_space = np.arange(self.action_dims)
 
-        self.policy=policy
-
-
+        self.policy = policy
 
     def collect_data(self):
         ob = self.env.reset()
@@ -67,9 +66,9 @@ class Collector:
 
 
 def main(_):
-    env_id=''
-    policy=None
-    data_collector = Collector(env_id,policy)
+    env_id = ''
+    policy = None
+    data_collector = Collector(env_id, policy)
 
     data_collector.collect_data()
 
