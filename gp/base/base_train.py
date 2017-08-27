@@ -14,17 +14,21 @@ class BaseTrainer:
         self.global_step_tensor = None
         self.global_step_input = None
         self.global_step_assign_op = None
+        self.global_time_step_tensor = None
+        self.global_time_step_input = None
+        self.global_time_step_assign_op = None
 
         self.summary_placeholders = {}
         self.summary_ops = {}
         self.scalar_summary_tags = self.config.scalar_summary_tags
-        #self.image_summary_tags = self.config.image_summary_tags
+        # self.image_summary_tags = self.config.image_summary_tags
 
-        # init the global step , the current epoch and the summaries
+        # init the global step, global time step, the current epoch and the summaries
         self.init_global_step()
+        self.init_global_time_step()
         self.init_cur_epoch()
         self.init_summaries()
-        #self.init_image_summary()  This is a specific for a certain model.
+        # self.init_image_summary()  This is a specific for a certain model.
         # To initialize all variables
         self.init = tf.group(tf.global_variables_initializer(), tf.local_variables_initializer())
         self.sess.run(self.init)
@@ -66,6 +70,16 @@ class BaseTrainer:
             self.global_step_tensor = tf.Variable(0, trainable=False, name='global_step')
             self.global_step_input = tf.placeholder('int32', None, name='global_step_input')
             self.global_step_assign_op = self.global_step_tensor.assign(self.global_step_input)
+
+    def init_global_time_step(self):
+        """
+        Create a global step variable to be a reference to the number of time steps
+        :return:
+        """
+        with tf.variable_scope('global_time_step'):
+            self.global_time_step_tensor = tf.Variable(0, trainable=False, name='global_time_step')
+            self.global_time_step_input = tf.placeholder('int32', None, name='global_time_step_input')
+            self.global_time_step_assign_op = self.global_step_tensor.assign(self.global_time_step_input)
 
     # summaries init
     def init_summaries(self):

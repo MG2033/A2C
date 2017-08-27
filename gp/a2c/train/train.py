@@ -42,12 +42,13 @@ class Trainer(BaseTrainer):
 
     def train(self):
         tstart = time.time()
-        self.global_time_step = 0
         loss_list = np.zeros(100, )
         policy_entropy_list = np.zeros(100, )
         fps_list = np.zeros(100, )
         arr_idx = 0
         start_iteration = self.global_step_tensor.eval(self.sess)
+        self.global_time_step = self.global_time_step_tensor.eval(self.sess)
+
         for iteration in tqdm(range(start_iteration, self.num_iterations + 1, 1), initial=start_iteration,
                               total=self.num_iterations):
 
@@ -82,7 +83,8 @@ class Trainer(BaseTrainer):
         dones = [False for _ in range(self.env.num_envs)]
 
         observation_s = np.zeros(
-            (self.env.num_envs, self.model.img_height, self.model.img_width, self.model.num_classes * self.model.num_stack),
+            (self.env.num_envs, self.model.img_height, self.model.img_width,
+             self.model.num_classes * self.model.num_stack),
             dtype=np.uint8)
         observation_s = self.__observation_update(self.env.reset(), observation_s)
 
@@ -151,6 +153,8 @@ class Trainer(BaseTrainer):
             summaries_arr_dict = self.env.info()
             self.env_summary_logger.add_summary_all(self.global_time_step, summaries_arr_dict)
             self.global_time_step += 1
+            self.global_time_step_assign_op.eval(session=self.sess, feed_dict={
+                self.global_time_step_input: self.global_time_step})
 
             # States and Masks are for LSTM Policy
             self.states = states
