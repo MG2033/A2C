@@ -20,7 +20,7 @@ class A2CConfig:
     load = True
 
     # If this equals -1, it means don't record
-    record_video_every = -1
+    record_video_every = 1
 
     # Summaries Config
     scalar_summary_tags = ['loss']

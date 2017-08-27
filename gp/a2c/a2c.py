@@ -34,7 +34,7 @@ class A2C:
         print('Training...')
         try:
             if A2CConfig.record_video_every != -1:
-                self.env.monitor(is_monitor=True, is_train=False, experiment_dir=A2CConfig.experiment_dir,
+                self.env.monitor(is_monitor=True, is_train=True, experiment_dir=A2CConfig.experiment_dir,
                                  record_video_every=A2CConfig.record_video_every)
             self.trainer.train()
         except KeyboardInterrupt:
