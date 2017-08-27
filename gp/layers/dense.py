@@ -29,7 +29,7 @@ def dense_p(name, x, w=None, output_dim=128, initializer=tf.contrib.layers.xavie
 
 def dense(name, x, w=None, output_dim=128, initializer=tf.contrib.layers.xavier_initializer(), l2_strength=0.0,
           bias=0.0,
-          activation=None, batchnorm_enabled=False, dropout_keep_prob=1.0,
+          activation=None, batchnorm_enabled=False, dropout_keep_prob=-1,
           is_training=True
           ):
     """
@@ -43,7 +43,7 @@ def dense(name, x, w=None, output_dim=128, initializer=tf.contrib.layers.xavier_
     :param bias: (float) Amount of bias.
     :param activation: (tf.graph operator) The activation function applied after the convolution operation. If None, linear is applied.
     :param batchnorm_enabled: (boolean) for enabling batch normalization.
-    :param dropout_keep_prob: (float) for the probability of keeping neurons.
+    :param dropout_keep_prob: (float) for the probability of keeping neurons. If equals -1, it means no dropout
     :param is_training: (boolean) to diff. between training and testing (important for batch normalization and dropout) 
     :return out: The output of the layer. (N, H)
     """
@@ -64,7 +64,10 @@ def dense(name, x, w=None, output_dim=128, initializer=tf.contrib.layers.xavier_
             else:
                 dense_a = activation(dense_o_b)
 
-        dense_o_dr = tf.nn.dropout(dense_a, dropout_keep_prob)
+        if dropout_keep_prob != -1:
+            dense_o_dr = tf.nn.dropout(dense_a, dropout_keep_prob)
+        else:
+            dense_o_dr = dense_a
 
         dense_o = dense_o_dr
     return dense_o

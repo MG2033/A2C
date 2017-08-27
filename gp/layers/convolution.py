@@ -104,7 +104,7 @@ def conv2d_transpose_p(name, x, w=None, output_shape=None, kernel_size=(3, 3), p
 
 def conv2d(name, x, w=None, num_filters=16, kernel_size=(3, 3), padding='SAME', stride=(1, 1),
              initializer=tf.contrib.layers.xavier_initializer(), l2_strength=0.0, bias=0.0,
-             activation=None, batchnorm_enabled=False, max_pool_enabled=False, dropout_keep_prob=1.0,
+             activation=None, batchnorm_enabled=False, max_pool_enabled=False, dropout_keep_prob=-1,
              is_training=True):
     """
     This block is responsible for a convolution 2D layer followed by optional (non-linearity, dropout, max-pooling).
@@ -121,7 +121,7 @@ def conv2d(name, x, w=None, num_filters=16, kernel_size=(3, 3), padding='SAME', 
     :param activation: (tf.graph operator) The activation function applied after the convolution operation. If None, linear is applied.
     :param batchnorm_enabled: (boolean) for enabling batch normalization.
     :param max_pool_enabled:  (boolean) for enabling max-pooling 2x2 to decrease width and height by a factor of 2.
-    :param dropout_keep_prob: (float) for the probability of keeping neurons.
+    :param dropout_keep_prob: (float) for the probability of keeping neurons. If equals -1, it means no dropout
     :param is_training: (boolean) to diff. between training and testing (important for batch normalization and dropout)
     :return: The output tensor of the layer (N, H', W', C').
     """
@@ -142,7 +142,10 @@ def conv2d(name, x, w=None, num_filters=16, kernel_size=(3, 3), padding='SAME', 
             else:
                 conv_a = activation(conv_o_b)
 
-        conv_o_dr = tf.nn.dropout(conv_a, dropout_keep_prob)
+        if dropout_keep_prob != -1:
+            conv_o_dr = tf.nn.dropout(conv_a, dropout_keep_prob)
+        else:
+            conv_o_dr = conv_a
 
         conv_o = conv_o_dr
         if max_pool_enabled:
@@ -153,7 +156,7 @@ def conv2d(name, x, w=None, num_filters=16, kernel_size=(3, 3), padding='SAME', 
 
 def atrous_conv2d(name, x, w=None, num_filters=16, kernel_size=(3, 3), padding='SAME', dilation_rate=1,
                     initializer=tf.contrib.layers.xavier_initializer(), l2_strength=0.0, bias=0.0,
-                    activation=None, batchnorm_enabled=False, max_pool_enabled=False, dropout_keep_prob=1.0,
+                    activation=None, batchnorm_enabled=False, max_pool_enabled=False, dropout_keep_prob=-1,
                     is_training=True):
     """
     This block is responsible for a Dilated convolution 2D layer followed by optional (non-linearity, dropout, max-pooling).
@@ -170,7 +173,7 @@ def atrous_conv2d(name, x, w=None, num_filters=16, kernel_size=(3, 3), padding='
     :param activation: (tf.graph operator) The activation function applied after the convolution operation. If None, linear is applied.
     :param batchnorm_enabled: (boolean) for enabling batch normalization.
     :param max_pool_enabled:  (boolean) for enabling max-pooling 2x2 to decrease width and height by a factor of 2.
-    :param dropout_keep_prob: (float) for the probability of keeping neurons.
+    :param dropout_keep_prob: (float) for the probability of keeping neurons. If equals -1, it means no dropout
     :param is_training: (boolean) to diff. between training and testing (important for batch normalization and dropout)
     :return: The output tensor of the layer (N, H', W', C').
     """
@@ -191,7 +194,10 @@ def atrous_conv2d(name, x, w=None, num_filters=16, kernel_size=(3, 3), padding='
             else:
                 conv_a = activation(conv_o_b)
 
-        conv_o_dr = tf.nn.dropout(conv_a, dropout_keep_prob)
+        if dropout_keep_prob != -1:
+            conv_o_dr = tf.nn.dropout(conv_a, dropout_keep_prob)
+        else:
+            conv_o_dr = conv_a
 
         conv_o = conv_o_dr
         if max_pool_enabled:
@@ -201,7 +207,7 @@ def atrous_conv2d(name, x, w=None, num_filters=16, kernel_size=(3, 3), padding='
 
 
 def conv2d_transpose(name, x, w=None, output_shape=None, kernel_size=(3, 3), padding='SAME', stride=(1, 1), l2_strength=0.0,
-               bias=0.0, activation=None, batchnorm_enabled=False, max_pool_enabled=False, dropout_keep_prob=1.0,
+               bias=0.0, activation=None, batchnorm_enabled=False, max_pool_enabled=False, dropout_keep_prob=-1,
                is_training=True):
     """
     This block is responsible for a convolution transpose 2D followed by optional (non-linearity, dropout, max-pooling).
@@ -217,7 +223,7 @@ def conv2d_transpose(name, x, w=None, output_shape=None, kernel_size=(3, 3), pad
     :param activation: (tf.graph operator) The activation function applied after the convolution operation. If None, linear is applied.
     :param batchnorm_enabled: (boolean) for enabling batch normalization.
     :param max_pool_enabled:  (boolean) for enabling max-pooling 2x2 to decrease width and height by a factor of 2.
-    :param dropout_keep_prob: (float) for the probability of keeping neurons.
+    :param dropout_keep_prob: (float) for the probability of keeping neurons. If equals -1, it means no dropout
     :param is_training: (boolean) to diff. between training and testing (important for batch normalization and dropout)
     :return out: The output of the layer. (output_shape[0], output_shape[1], output_shape[2], output_shape[3])
     """
@@ -239,7 +245,10 @@ def conv2d_transpose(name, x, w=None, output_shape=None, kernel_size=(3, 3), pad
             else:
                 conv_a = activation(conv_o_b)
 
-        conv_o_dr = tf.nn.dropout(conv_a, dropout_keep_prob)
+        if dropout_keep_prob != -1:
+            conv_o_dr = tf.nn.dropout(conv_a, dropout_keep_prob)
+        else:
+            conv_o_dr = conv_a
 
         conv_o = conv_o_dr
         if max_pool_enabled:
