@@ -47,7 +47,7 @@ class Trainer(BaseTrainer):
         fps_list = np.zeros(100, )
         arr_idx = 0
         start_iteration = self.global_step_tensor.eval(self.sess)
-        self.global_time_step = start_iteration * self.num_steps
+        self.global_time_step = self.global_time_step_tensor.eval(self.sess)
 
         for iteration in tqdm(range(start_iteration, self.num_iterations + 1, 1), initial=start_iteration,
                               total=self.num_iterations):
@@ -154,6 +154,9 @@ class Trainer(BaseTrainer):
             summaries_arr_dict = self.env.info()
             self.env_summary_logger.add_summary_all(self.global_time_step, summaries_arr_dict)
             self.global_time_step += 1
+            self.global_time_step_assign_op.eval(session=self.sess, feed_dict={
+                self.global_time_step_input: self.global_time_step})
+
 
             # States and Masks are for LSTM Policy
             self.states = states

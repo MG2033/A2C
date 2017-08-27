@@ -52,9 +52,7 @@ class Model:
             self.actions = tf.placeholder(tf.int32, [None])  # actions
             self.advantage = tf.placeholder(tf.float32, [None])  # advantage function
             self.reward = tf.placeholder(tf.float32, [None])  # reward
-
             self.learning_rate = tf.placeholder(tf.float32, [])  # learning rate
-            self.keep_prob = tf.placeholder(tf.float32)  # dropout keep prob
             self.is_training = tf.placeholder(tf.bool)  # is_training
 
     def init_network(self):
@@ -75,7 +73,7 @@ class Model:
             self.loss = self.policy_gradient_loss - self.entropy * self.entropy_coeff + self.value_function_loss * self.vf_coeff
 
             # Gradient Clipping
-            params = find_trainable_variables("model")
+            params = find_trainable_variables("policy")
             grads = tf.gradients(self.loss, params)
             if self.max_grad_norm is not None:
                 grads, grad_norm = tf.clip_by_global_norm(grads, self.max_grad_norm)
