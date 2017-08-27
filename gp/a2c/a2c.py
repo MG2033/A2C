@@ -11,10 +11,10 @@ class A2C:
     def __init__(self):
         tf.reset_default_graph()
 
-        gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.95)
+        #gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.95)
         config = tf.ConfigProto(allow_soft_placement=True,
                                 intra_op_parallelism_threads=A2CConfig.num_envs,
-                                inter_op_parallelism_threads=A2CConfig.num_envs, gpu_options=gpu_options)
+                                inter_op_parallelism_threads=A2CConfig.num_envs)
         config.gpu_options.allow_growth = True
         sess = tf.Session(config=config)
 

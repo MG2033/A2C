@@ -44,14 +44,14 @@ class Model:
     def init_input(self):
         with tf.name_scope('input'):
             self.X_input_train_shape = (
-                self.train_batch_size, self.img_height, self.img_width, self.num_classes * self.num_stack)
+                None, self.img_height, self.img_width, self.num_classes * self.num_stack)
             self.X_input_step_shape = (
-                self.train_batch_size // self.num_steps, self.img_height, self.img_width,
+                None, self.img_height, self.img_width,
                 self.num_classes * self.num_stack)
 
-            self.actions = tf.placeholder(tf.int32, [self.train_batch_size])  # actions
-            self.advantage = tf.placeholder(tf.float32, [self.train_batch_size])  # advantage function
-            self.reward = tf.placeholder(tf.float32, [self.train_batch_size])  # reward
+            self.actions = tf.placeholder(tf.int32, [None])  # actions
+            self.advantage = tf.placeholder(tf.float32, [None])  # advantage function
+            self.reward = tf.placeholder(tf.float32, [None])  # reward
 
             self.learning_rate = tf.placeholder(tf.float32, [])  # learning rate
             self.keep_prob = tf.placeholder(tf.float32)  # dropout keep prob
