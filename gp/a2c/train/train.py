@@ -78,24 +78,25 @@ class Trainer(BaseTrainer):
                 arr_idx = 0
         self.env.close()
 
-    def test(self, total_timesteps):
+    def test(self, total_timesteps, env):
         states = self.step_policy.initial_state
-        dones = [False for _ in range(self.env.num_envs)]
+
+        dones = [False for _ in range(env.num_envs)]
 
         observation_s = np.zeros(
-            (self.env.num_envs, self.model.img_height, self.model.img_width,
+            (env.num_envs, self.model.img_height, self.model.img_width,
              self.model.num_classes * self.model.num_stack),
             dtype=np.uint8)
-        observation_s = self.__observation_update(self.env.reset(), observation_s)
+        observation_s = self.__observation_update(env.reset(), observation_s)
 
         for _ in tqdm(range(total_timesteps)):
             actions, values, states = self.step_policy.step(observation_s, states, dones)
-            observation, rewards, dones, _ = self.env.step(actions)
+            observation, rewards, dones, _ = env.step(actions)
             for n, done in enumerate(dones):
                 if done:
                     observation_s[n] *= 0
             observation_s = self.__observation_update(observation, observation_s)
-        self.env.close()
+        env.close()
 
     def __rollout_update(self, observations, states, rewards, masks, actions, values):
         # Updates the model per trajectory for using parallel environments. Uses the train_policy.

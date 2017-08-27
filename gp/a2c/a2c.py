@@ -45,13 +45,14 @@ class A2C:
     def test(self, total_timesteps):
         print('Testing...')
         try:
+            env = self.__make_all_environments(num_envs=1, env_class=GymEnv, env_name=A2CConfig.env_name, seed=A2CConfig.env_seed)
             if A2CConfig.record_video_every != -1:
-                self.env.monitor(is_monitor=True, is_train=False, experiment_dir=A2CConfig.experiment_dir,
+                env.monitor(is_monitor=True, is_train=False, experiment_dir=A2CConfig.experiment_dir,
                                  record_video_every=A2CConfig.record_video_every)
             else:
-                self.env.monitor(is_monitor=True, is_train=False, experiment_dir=A2CConfig.experiment_dir,
+                env.monitor(is_monitor=True, is_train=False, experiment_dir=A2CConfig.experiment_dir,
                                  record_video_every=10)
-            self.trainer.test(total_timesteps=total_timesteps)
+            self.trainer.test(total_timesteps=total_timesteps, env=env)
         except KeyboardInterrupt:
             print('Error occured..')
             self.env.close()
