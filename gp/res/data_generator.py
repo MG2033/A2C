@@ -45,7 +45,7 @@ class GenerateData:
             self.current_y = self.y[idx]
             self.current_actions = self.actions[idx]
             self.current_rewards = self.rewards[idx]
-            for i in range(0, self.config.all_seq_length, self.config.truncated_time_steps):
+            for i in range(0, self.config.episode_length, self.config.truncated_time_steps):
                 if i == 0:
                     new_sequence = True
                 else:

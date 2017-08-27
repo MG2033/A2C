@@ -4,6 +4,17 @@ import tensorflow as tf
 class ActionLSTMCell(tf.nn.rnn_cell.BasicLSTMCell):
     def __init__(self, num_units, w_hv, w_hz, w_vh, w_va,
                  activation=None, reuse=None, scope=None):
+        """
+
+        :param num_units: lstm num units
+        :param w_hv:
+        :param w_hz:
+        :param w_vh:
+        :param w_va:
+        :param activation: activation function
+        :param reuse: whether to reuse variables or not
+        :param scope: scope name
+        """
         super(tf.nn.rnn_cell.BasicLSTMCell, self).__init__(_reuse=reuse)
         self.scope = scope
         self._num_units = num_units
@@ -36,12 +47,23 @@ class ActionLSTMCell(tf.nn.rnn_cell.BasicLSTMCell):
                                                                            tf.transpose(output, (1, 0)))
 
 
-def actionlstm_cell(x, h, a, num_units, input_shape, action_dim,
+def actionlstm_cell(x, h, a, num_units, action_dim,
                     initializer=tf.contrib.layers.xavier_initializer(),
                     activation=tf.tanh, scope='action_lstm'):
+    """
+    :param x:  state input
+    :param h: hidden state tuple input
+    :param a: action input
+    :param num_units: lstm num units
+    :param action_dim: input action dimension
+    :param initializer: initializer function
+    :param activation: activation function
+    :param scope: scope name
+    :return: lstm output and state
+    """
     with tf.variable_scope(scope) as scope_:
         # Initialize the weights
-        state_size = input_shape[1]
+        state_size = x.get_shape()[1]
 
         w_hv = tf.get_variable('w_hv', [4 * num_units, 2 * num_units], initializer=initializer)
         w_hz = tf.get_variable('w_hz', [4 * num_units, state_size], initializer=initializer)

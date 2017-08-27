@@ -102,3 +102,4 @@ ENV/
 
 # pycharm
 .idea/
+.pyc
