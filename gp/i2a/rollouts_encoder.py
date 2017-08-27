@@ -74,5 +74,6 @@ class RolloutsEncoder:
         with tf.name_scope('wrap_out'):
             net_unwrap = tf.stack(net_unwrap)
             self.__output = tf.transpose(net_unwrap, [1, 0, 2])
+            self.__output = tf.reshape(self.__output, [self.__config.actions_num, -1])
 
         return self.__output
