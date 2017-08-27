@@ -1,7 +1,7 @@
 class ResConfig:
     #model configs
     predict_reward = True
-    truncated_time_steps = 2
+    truncated_time_steps = 3
     state_size = [256, 160, 3]
     dropout_rate = 0.3
     lstm_size = 1024
@@ -14,7 +14,7 @@ class ResConfig:
     predict_reward = True
 
     #training configs
-    nit_epoch = 50
+    nit_epoch = 5
     n_epochs = 1500
     num_episodes_train = 10
     num_episodes_test = 400

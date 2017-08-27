@@ -70,7 +70,6 @@ class ModelNetwork:
 
         with tf.name_scope('lstm_layer') as scope:
             lstm_out, lstm_new_state = actionlstm_cell(encoded, lstm_state, action, self.config.lstm_size,
-                                                       [None, input_size],
                                                        self.config.action_dim,
                                                        initializer=tf.contrib.layers.xavier_initializer(),
                                                        activation=tf.tanh, scope='lstm_layer')
@@ -133,15 +132,15 @@ class ModelNetwork:
         else:
             reward_out = None
 
-        # print encoder_decoder layers shape for debugging
-        print(drp1.get_shape().as_list())
-        print(drp2.get_shape().as_list())
-        print(drp3.get_shape().as_list())
-        print(drp4.get_shape().as_list())
-        print(drp6.get_shape().as_list())
-        print(drp7.get_shape().as_list())
-        print(drp8.get_shape().as_list())
-        print(next_state_out.get_shape().as_list())
+        # # print encoder_decoder layers shape for debugging
+        # print(drp1.get_shape().as_list())
+        # print(drp2.get_shape().as_list())
+        # print(drp3.get_shape().as_list())
+        # print(drp4.get_shape().as_list())
+        # print(drp6.get_shape().as_list())
+        # print(drp7.get_shape().as_list())
+        # print(drp8.get_shape().as_list())
+        # print(next_state_out.get_shape().as_list())
 
         return next_state_out, reward_out, lstm_new_state
 
@@ -181,12 +180,13 @@ class ModelNetwork:
 
                 self.reward_output = tf.stack(reward_unwrap)
 
-        # state loss
-        self.loss = tf.losses.mean_squared_error(self.y, self.output)
-        # adding reward loss
-        if self.config.predict_reward:
-            self.reward_loss = tf.losses.mean_squared_error(self.reward_output, self.rewards)
-            self.loss += self.reward_loss
+        with tf.name_scope('loss'):
+            # state loss
+            self.loss = tf.losses.mean_squared_error(self.y, self.output)
+            # adding reward loss
+            if self.config.predict_reward:
+                self.reward_loss = tf.losses.mean_squared_error(self.reward_output, self.rewards)
+                self.loss += self.reward_loss
 
         # for batchnorm layers
         extra_update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
