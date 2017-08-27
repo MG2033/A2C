@@ -24,14 +24,7 @@ class ResConfig:
     epsilon = 0.15
 
     #summaries configs
-    scalar_summary_tags = ['loss', 'sensor1_relative_error', 'test_MSE',
-                           'sensor2_relative_error', 'sensor3_relative_error', 'sensor4_relative_error',
-                           'sensor5_relative_error', 'sensor6_relative_error', 'sensor7_relative_error',
-                           'sensor8_relative_error', 'sensor9_relative_error', 'sensor10_relative_error',
-                           'sensor11_relative_error', 'sensor12_relative_error', 'sensor13_relative_error',
-                           'sensor14_relative_error', 'sensor15_relative_error', 'sensor16_relative_error',
-                           'sensor17_relative_error', 'sensor18_relative_error', 'sensor19_relative_error',
-                           'rewards_relative_error']
+    scalar_summary_tags = ['loss', 'test_MSE']
 
     #paths configs
     checkpoint_dir = '/home/gemy/work/projects/GP/with_rewards_summaries/'
