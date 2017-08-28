@@ -72,5 +72,5 @@ class A2C:
 
 if __name__ == '__main__':
     a2c = A2C()
-    #a2c.train()
-    a2c.test(total_timesteps=10000000)
+    a2c.train()
+    #a2c.test(total_timesteps=10000000)
