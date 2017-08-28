@@ -151,7 +151,7 @@ class Trainer(BaseTrainer):
             observation, rewards, dones, info = self.env.step(actions)
 
             # Tensorboard dump
-            self.env_summary_logger.add_summary_all(info)
+            self.env_summary_logger.add_summary_all(info, self.global_time_step)
             self.global_time_step += 1
             self.global_time_step_assign_op.eval(session=self.sess, feed_dict={
                 self.global_time_step_input: self.global_time_step})

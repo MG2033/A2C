@@ -5,13 +5,10 @@ from gym import Wrapper, wrappers
 class Monitor(Wrapper):
     def __init__(self, env, rank=0):
         Wrapper.__init__(self, env=env)
-        self.tstart = time.time()
         self.rank = rank
         self.rewards = []
-        self.total_steps = 0
         self.current_metadata = {}  # extra info that gets injected into each log entry
-        self.summaries_dict = {'reward': 0, 'episode_length': 0, 'step': 0}
-        self.tstart = time.time()
+        self.summaries_dict = {'reward': 0, 'episode_length': 0}
 
     def reset(self):
         self.summaries_dict['reward'] = -1
@@ -25,8 +22,6 @@ class Monitor(Wrapper):
         if done:
             self.summaries_dict['reward'] = sum(self.rewards)
             self.summaries_dict['episode_length'] = len(self.rewards)
-            self.summaries_dict['step'] = round(time.time() - self.tstart)
-        self.total_steps += 1
         info = self.summaries_dict
         return observation, reward, done, info
 
