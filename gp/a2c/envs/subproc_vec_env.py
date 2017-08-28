@@ -10,9 +10,10 @@ def worker(remote, env_fn_wrapper):
         cmd, data = remote.recv()
         if cmd == 'step':
             ob, reward, done, info = env.step(data)
+            total_info = info.copy()  # Very important for passing by value instead of reference
             if done:
                 ob = env.reset()
-            remote.send((ob, reward, done, info))
+            remote.send((ob, reward, done, total_info))
         elif cmd == 'reset':
             ob = env.reset()
             remote.send(ob)
@@ -21,8 +22,6 @@ def worker(remote, env_fn_wrapper):
             break
         elif cmd == 'get_spaces':
             remote.send((env.get_action_space(), env.get_observation_space()))
-        elif cmd == 'info':
-            remote.send(env.summaries_dict)
         elif cmd == 'monitor':
             is_monitor, is_train, experiment_dir, record_video_every = data
             env.monitor(is_monitor, is_train, experiment_dir, record_video_every)
@@ -79,11 +78,6 @@ class SubprocVecEnv():
             remote.send(('close', None))
         for p in self.ps:
             p.join()
-
-    def info(self):
-        for remote in self.remotes:
-            remote.send(('info', None))
-        return [remote.recv() for remote in self.remotes]
 
     def monitor(self, is_monitor=True, is_train=True, experiment_dir="", record_video_every=10):
         for remote in self.remotes:

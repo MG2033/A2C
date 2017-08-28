@@ -148,15 +148,13 @@ class Trainer(BaseTrainer):
             mb_dones.append(self.dones)
 
             # Take a step in the real environment
-            observation, rewards, dones, _ = self.env.step(actions)
+            observation, rewards, dones, info = self.env.step(actions)
 
             # Tensorboard dump
-            summaries_arr_dict = self.env.info()
-            self.env_summary_logger.add_summary_all(summaries_arr_dict)
+            self.env_summary_logger.add_summary_all(info)
             self.global_time_step += 1
             self.global_time_step_assign_op.eval(session=self.sess, feed_dict={
                 self.global_time_step_input: self.global_time_step})
-
 
             # States and Masks are for LSTM Policy
             self.states = states

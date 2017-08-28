@@ -1,5 +1,6 @@
 from gp.a2c.envs.base_env import BaseEnv
 from gp.a2c.envs.atari_wrappers import wrap_deepmind
+from gp.a2c.envs.monitor import Monitor
 import gym
 from gym import wrappers
 
@@ -11,16 +12,17 @@ class GymEnv(BaseEnv):
         self.make()
 
     def make(self):
-        env = gym.make(self.env_name)
+        env = Monitor(gym.make(self.env_name), self.rank)
         env.seed(self.seed + self.rank)
         self.env = wrap_deepmind(env)
         return env
 
     def step(self, data):
-        return self._info_step(self.env.step(data))
+        observation, reward, done, info = self.env.step(data)
+        return observation, reward, done, info
 
     def reset(self):
-        return self._info_reset(self.env.reset())
+        return self.env.reset()
 
     def get_action_space(self):
         return self.env.action_space
