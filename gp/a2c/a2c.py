@@ -50,7 +50,7 @@ class A2C:
                                  record_video_every=A2CConfig.record_video_every)
             else:
                 env.monitor(is_monitor=True, is_train=False, experiment_dir=A2CConfig.experiment_dir,
-                                 record_video_every=10)
+                                 record_video_every=20)
             self.trainer.test(total_timesteps=total_timesteps, env=env)
         except KeyboardInterrupt:
             print('Error occured..')
@@ -72,5 +72,5 @@ class A2C:
 
 if __name__ == '__main__':
     a2c = A2C()
-    a2c.train()
-    # a2c.test(total_timesteps=10000000)
+    #a2c.train()
+    a2c.test(total_timesteps=10000000)

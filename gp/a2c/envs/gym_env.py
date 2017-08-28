@@ -10,6 +10,7 @@ class GymEnv(BaseEnv):
         super().__init__(env_name, id)
         self.seed = seed
         self.make()
+        self.gym_env = self.env.env.env.env.env.env.env
 
     def make(self):
         env = Monitor(gym.make(self.env_name), self.rank)
@@ -33,12 +34,13 @@ class GymEnv(BaseEnv):
     def monitor(self, is_monitor, is_train, experiment_dir="", record_video_every=10):
         if is_monitor:
             if is_train:
-                self.env = wrappers.Monitor(self.env, experiment_dir + 'output', resume=True,
+                self.gym_env = wrappers.Monitor(self.gym_env, experiment_dir + 'output', resume=True,
                                             video_callable=lambda count: count % record_video_every == 0)
             else:
-                self.env = wrappers.Monitor(self.env, experiment_dir + 'test', resume=True,
+                self.gym_env = wrappers.Monitor(self.gym_env, experiment_dir + 'test', resume=True,
                                             video_callable=lambda count: count % record_video_every == 0)
         else:
-            self.env = wrappers.Monitor(self.env, experiment_dir + 'output', resume=True,
+            self.gym_env = wrappers.Monitor(self.gym_env, experiment_dir + 'output', resume=True,
                                         video_callable=False)
+        self.env.env.env.env.env.env.env = self.gym_env
         self.env.reset()
