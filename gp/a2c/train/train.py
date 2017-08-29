@@ -78,7 +78,7 @@ class Trainer(BaseTrainer):
                     mean_pe)[:8] + ' - fps: ' + str(mean_fps))
                 arr_idx = 0
 
-            if iteration % save_every == 0:
+            if iteration % self.save_every == 0:
                 self.save()
         self.env.close()
 
