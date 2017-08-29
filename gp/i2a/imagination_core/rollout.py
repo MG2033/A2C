@@ -1,6 +1,6 @@
 import numpy as np
 import tensorflow as tf
-from gp.layers.utils import orthogonal_initializer, noise_and_argmax
+from gp.layers.utils import orthogonal_initializer
 from gp.layers.convolution import conv2d
 from gp.layers.dense import flatten, dense
 
