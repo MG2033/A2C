@@ -81,7 +81,6 @@ class BaseTrainer:
             self.global_time_step_input = tf.placeholder('int32', None, name='global_time_step_input')
             self.global_time_step_assign_op = self.global_time_step_tensor.assign(self.global_time_step_input)
 
-
     # summaries init
     def init_summaries(self):
         """
