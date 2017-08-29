@@ -1,5 +1,5 @@
 from gp.base.base_train import BaseTrainer
-from gp.utils.utils import LearningRateDecay
+from gp.utils.lr_decay import LearningRateDecay
 from gp.utils.utils import create_experiment_dirs, create_list_dirs
 import numpy as np
 import time
@@ -49,7 +49,6 @@ class Trainer(BaseTrainer):
         arr_idx = 0
         start_iteration = self.global_step_tensor.eval(self.sess)
         self.global_time_step = self.global_time_step_tensor.eval(self.sess)
-
         for iteration in tqdm(range(start_iteration, self.num_iterations + 1, 1), initial=start_iteration,
                               total=self.num_iterations):
 
@@ -77,7 +76,6 @@ class Trainer(BaseTrainer):
                 print('Iteration:' + str(iteration) + ' - loss: ' + str(mean_loss)[:8] + ' - policy_entropy: ' + str(
                     mean_pe)[:8] + ' - fps: ' + str(mean_fps))
                 arr_idx = 0
-
             if iteration % self.save_every == 0:
                 self.save()
         self.env.close()
