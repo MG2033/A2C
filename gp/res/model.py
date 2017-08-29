@@ -25,7 +25,6 @@ class RESModel:
 
             # ------------------- inferece inputs
 
-
     def template(self, x, action, lstm_state):
 
         """
@@ -162,9 +161,9 @@ class RESModel:
             else:
                 net_unwrap.append(next_state_out)
 
-            # if i == 0:
-            #     self.first_step_out = (next_state_out, reward_out)
-            #     self.first_step_lstm_state = lstm_state
+                # if i == 0:
+                #     self.first_step_out = (next_state_out, reward_out)
+                #     self.first_step_lstm_state = lstm_state
 
         self.final_lstm_state = lstm_state
 
@@ -190,7 +189,6 @@ class RESModel:
             # RMSProp as in paper
             self.train_step = tf.train.RMSPropOptimizer(self.config.learning_rate).minimize(self.loss)
 
-
     def build_inference_model(self):
         net_unwrap = []
         reward_unwrap = []
@@ -208,9 +206,9 @@ class RESModel:
             else:
                 net_unwrap.append(next_state_out)
 
-            # if i == 0:
-            #     self.first_step_out = (next_state_out, reward_out)
-            #     self.first_step_lstm_state = lstm_state
+                # if i == 0:
+                #     self.first_step_out = (next_state_out, reward_out)
+                #     self.first_step_lstm_state = lstm_state
 
         self.final_lstm_state = lstm_state
 

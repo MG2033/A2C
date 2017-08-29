@@ -18,10 +18,13 @@ class Rollout:
     def build_rollout_model(self):
         rollout_policy_network = tf.make_template('rollout_policy_network', self.policy_templete)
         rollout_res_network = tf.make_template('rollout_res_network', self.res_templete)
+
         observations_unwrap = []
         rewards_unwrap = []
+
         # the actual prediction of the rollout policy (for loss)
         self.rollout_actions_prob = rollout_policy_network(self.observation)
+
         actions = tf.constant(np.eye(self.config.actions_num), dtype=tf.float32,
                               shape=[self.config.actions_num] * 2)
         multiples = tf.constant([self.config.actions_num, 1, 1, 1], tf.int32, shape=[4])
