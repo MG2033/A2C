@@ -25,7 +25,6 @@ class RESModel:
 
             # ------------------- inferece inputs
 
-        self.build_training_model()
 
     def template(self, x, action, lstm_state):
 
