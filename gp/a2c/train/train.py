@@ -14,6 +14,7 @@ class Trainer(BaseTrainer):
         super().__init__(sess, model, None, A2CConfig, FLAGS)
         self.train_policy = self.model.train_policy
         self.step_policy = self.model.step_policy
+        self.save_every = 20000
         self.env = env
         self.sess = sess
         self.num_steps = self.model.num_steps
@@ -76,6 +77,9 @@ class Trainer(BaseTrainer):
                 print('Iteration:' + str(iteration) + ' - loss: ' + str(mean_loss)[:8] + ' - policy_entropy: ' + str(
                     mean_pe)[:8] + ' - fps: ' + str(mean_fps))
                 arr_idx = 0
+
+            if iteration % save_every == 0:
+                self.save()
         self.env.close()
 
     def test(self, total_timesteps, env):
