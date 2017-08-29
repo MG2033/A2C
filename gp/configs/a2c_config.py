@@ -23,7 +23,6 @@ class A2CConfig:
     record_video_every = -1
 
     # Summaries Config
-    scalar_summary_tags = ['loss']
     env_summary_tags = ['reward', 'episode_length']
 
     # Prepare Directories
