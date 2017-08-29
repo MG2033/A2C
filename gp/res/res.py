@@ -1,4 +1,4 @@
-from  gp.configs.res_config import ResConfig
+from gp.configs.res_config import ResConfig
 from gp.res.model import ModelNetwork
 from gp.res.data_generator import GenerateData
 from gp.res.train import Trainer

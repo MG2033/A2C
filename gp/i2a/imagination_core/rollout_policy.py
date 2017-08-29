@@ -5,7 +5,7 @@ from gp.layers.convolution import conv2d
 from gp.layers.dense import flatten, dense
 
 
-class Rollout:
+class RolloutPolicy:
     @staticmethod
     def policy_template(scope, observation, num_actions):
         with tf.variable_scope(scope):
