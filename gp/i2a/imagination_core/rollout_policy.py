@@ -6,10 +6,11 @@ from gp.layers.dense import flatten, dense
 
 
 class RolloutPolicy:
-    def __init__(self, input_shape, num_actions, reuse=False, is_training=True, name='rollout'):
-        with tf.name_scope(name + "_policy_input"):
+    def __init__(self, input_shape, num_actions, config, reuse=False, is_training=True):
+        self.distillation_loss_scaling = config.distillation_loss_scaling
+        with tf.name_scope("rollout_policy_input"):
             self.X_input = tf.placeholder(tf.uint8, input_shape)
-        with tf.variable_scope(name + "_policy", reuse=reuse):
+        with tf.variable_scope("rollout_policy", reuse=reuse):
             conv1 = conv2d('conv1', tf.cast(self.X_input, tf.float32) / 255, num_filters=32, kernel_size=(8, 8),
                            padding='VALID', stride=(4, 4),
                            initializer=orthogonal_initializer(np.sqrt(2)), activation=tf.nn.relu,
@@ -40,22 +41,27 @@ class RolloutPolicy:
             with tf.name_scope('action'):
                 self.action_s = noise_and_argmax(self.policy_logits)
 
-            with tf.name_scope('action_original'):
+            with tf.name_scope('action_argmax'):
                 self.action_o = tf.argmax(self.policy_logits, 1)
 
-    def train_step(self, observation, *_args, **_kwargs):
+            with tf.name_scope('action_softmax'):
+                self.action_softmax = tf.nn.softmax(self.policy_logits)
+
+    def train_step(self, sess, observation, *_args, **_kwargs):
         # Take a step using the model and return the predicted policy and value function
-        action, value = self.sess.run([self.action_s, self.value_s], {self.X_input: observation})
+        action, value = sess.run([self.action_s, self.value_s], {self.X_input: observation})
         return action, value
 
-    def test_step(self, observation, *_args, **_kwargs):
+    def test_step(self, sess, observation, *_args, **_kwargs):
         # Take a step using the model and return the predicted policy and value function
-        action, value = self.sess.run([self.action_o, self.value_s], {self.X_input: observation})
+        action, value = sess.run([self.action_o, self.value_s], {self.X_input: observation})
         return action, value
 
-    def loss(self, behavioural_policy_argmaxed):
-        pass
+    def loss(self, behavioural_policy):
+        # Take a softmax policy, and apply the rollout auxillary loss.
+        ep = 1e-6
+        return tf.reduce_mean(-tf.reduce_sum(behavioural_policy * tf.log(self.action_softmax + ep), axis=-1))
 
-    def value(self, observation, *_args, **_kwargs):
+    def value(self, sess, observation, *_args, **_kwargs):
         # Return the predicted value function for a given observation
-        return self.sess.run(self.value_s, {self.X_input: observation})
+        return sess.run(self.value_s, {self.X_input: observation})
