@@ -49,6 +49,7 @@ class Trainer(BaseTrainer):
         arr_idx = 0
         start_iteration = self.global_step_tensor.eval(self.sess)
         self.global_time_step = self.global_time_step_tensor.eval(self.sess)
+
         for iteration in tqdm(range(start_iteration, self.num_iterations + 1, 1), initial=start_iteration,
                               total=self.num_iterations):
 

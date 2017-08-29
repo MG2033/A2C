@@ -15,8 +15,13 @@ class VariablesSaver:
         self.__save_obj(output_dict, file_name)
 
     def load(self, file_name):
-        print(self.__load_obj(file_name))
-        return self.__load_obj(file_name)
+        variables = tf.trainable_variables()
+        dict = self.__load_obj(file_name)
+        for variable in variables:
+            for key, value in dict.items():
+                if key in variable.name:
+                    tf.assign(variable, value)
+                    print("Variable: " + key + " loaded")
 
     def __save_obj(self, obj, name):
         with open(name, 'wb') as f:
