@@ -15,13 +15,15 @@ class ModelNetwork:
 
         with tf.name_scope('input'):
             self.x = tf.placeholder(tf.float32, [None, self.config.truncated_time_steps] + self.config.state_size,
-                                    name='x')
+                                    name='states')
             self.y = tf.placeholder(tf.float32, [None, self.config.truncated_time_steps] + self.config.state_size,
-                                    name='y')
+                                    name='next_states')
             self.rewards = tf.placeholder(tf.float32, [None, self.config.truncated_time_steps, 1],
                                           name='rewards')
             self.actions = tf.placeholder(tf.float32, [None, self.config.truncated_time_steps, self.config.action_dim],
                                           name='actions')
+
+            # ------------------- inferece inputs
 
         self.build_model()
 
@@ -149,9 +151,7 @@ class ModelNetwork:
         reward_unwrap = []
         network_template = tf.make_template('network', self.template)
 
-        lstm_state = self.initial_lstm_state
-        lstm_state = tf.contrib.rnn.LSTMStateTuple(lstm_state[0], lstm_state[1])
-        # lstm_state = None
+        lstm_state = tf.contrib.rnn.LSTMStateTuple(self.initial_lstm_state[0], self.initial_lstm_state[1])
         for i in range(self.config.truncated_time_steps):
             next_state_out, reward_out, lstm_state = network_template(self.x[:, i, :], self.actions[:, i], lstm_state)
 
@@ -163,30 +163,27 @@ class ModelNetwork:
             else:
                 net_unwrap.append(next_state_out)
 
-            if i == 0:
-                self.first_step_out = (next_state_out, reward_out)
-                self.first_step_lstm_state = lstm_state
+            # if i == 0:
+            #     self.first_step_out = (next_state_out, reward_out)
+            #     self.first_step_lstm_state = lstm_state
 
         self.final_lstm_state = lstm_state
 
         with tf.name_scope('wrap_out'):
             net_unwrap = tf.stack(net_unwrap)
-
             self.output = tf.transpose(net_unwrap, [1, 0, 2, 3, 4])
 
-            # self.output = tf.reshape(net_unwrap, [-1, self.config.truncated_time_steps, self.config.state_size])
             if self.config.predict_reward:
                 reward_unwrap = tf.stack(reward_unwrap)
-
                 self.reward_output = tf.stack(reward_unwrap)
 
         with tf.name_scope('loss'):
             # state loss
-            self.loss = tf.losses.mean_squared_error(self.y, self.output)
+            self.states_loss = tf.losses.mean_squared_error(self.y, self.output)
             # adding reward loss
             if self.config.predict_reward:
                 self.reward_loss = tf.losses.mean_squared_error(self.reward_output, self.rewards)
-                self.loss += self.reward_loss
+                self.loss = self.states_loss + self.reward_loss
 
         # for batchnorm layers
         extra_update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)

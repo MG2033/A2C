@@ -11,15 +11,15 @@ class GenerateData:
         x = np.load(config.x_path)
         self.rewards = np.load(config.rewards_path)
 
-        np.random.shuffle(x)
+        np.random.shuffle(x)  # -----------------
         self.y = x[:, 1:]
         self.x = x[:, :-1]
 
-        np.random.shuffle(self.rewards)
+        np.random.shuffle(self.rewards)  # -----------------
         self.actions = None
         self.config = config
 
-        self.prepare_actions()
+        self.prepare_actions()  # -----------------
 
         self.rewards = np.expand_dims(self.rewards, axis=2)
 
@@ -60,5 +60,5 @@ class GenerateData:
         self.actions = np.zeros(
             (self.config.num_episodes, self.config.episode_length, self.config.action_dim))
         actions = np.int32(np.load(self.config.actions_path))
-        np.random.shuffle(actions)
+        np.random.shuffle(actions)  # -----------------
         self.actions[:, actions[:self.config.num_episodes]] = 1
