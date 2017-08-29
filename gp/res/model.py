@@ -2,7 +2,7 @@ from gp.layers.action_conditional_lstm import actionlstm_cell
 import tensorflow as tf
 
 
-class ModelNetwork:
+class RESModel:
     def __init__(self, config):
         """
         :param config: configration object
@@ -27,7 +27,7 @@ class ModelNetwork:
 
         self.build_model()
 
-    def template(self, x, action, lstm_state):
+    def template(self, x, action, lstzm_state):
 
         """
         :param x: input tensor of shape: [None, truncated_time_steps ] + self.config.state_size
