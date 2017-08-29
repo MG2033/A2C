@@ -48,7 +48,7 @@ class Trainer(BaseTrainer):
             loss = np.mean(losses)
 
             summaries_dict = {'loss': loss}
-            self.add_summary(cur_it, summaries_dict=summaries_dict, summaries_merged=self.model.summaries)
+            self.add_scaler_summary(cur_it, summaries_dict=summaries_dict, summaries_merged=self.model.summaries)
 
             loop.close()
             print("epoch-" + str(cur_epoch) + "-" + "loss-" + str(loss))
