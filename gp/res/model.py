@@ -2,7 +2,7 @@ from gp.layers.action_conditional_lstm import actionlstm_cell
 import tensorflow as tf
 
 
-class ModelNetwork:
+class RESModel:
     def __init__(self, config):
         """
         :param config: configration object
@@ -25,7 +25,7 @@ class ModelNetwork:
 
             # ------------------- inferece inputs
 
-        self.build_model()
+        self.build_training_model()
 
     def template(self, x, action, lstm_state):
 
@@ -146,7 +146,53 @@ class ModelNetwork:
 
         return next_state_out, reward_out, lstm_new_state
 
-    def build_model(self):
+    def build_training_model(self):
+        net_unwrap = []
+        reward_unwrap = []
+        network_template = tf.make_template('network', self.template)
+
+        lstm_state = tf.contrib.rnn.LSTMStateTuple(self.initial_lstm_state[0], self.initial_lstm_state[1])
+        for i in range(self.config.truncated_time_steps):
+            next_state_out, reward_out, lstm_state = network_template(self.x[:, i, :], self.actions[:, i], lstm_state)
+
+            if self.config.predict_reward:
+                reward_unwrap.append(reward_out)
+                # the resize is just temp sol until calculate conv_deconv stuff
+                # net_unwrap.append(tf.image.resize_images(next_state_out, (256, 160)))
+                net_unwrap.append(next_state_out)
+            else:
+                net_unwrap.append(next_state_out)
+
+            # if i == 0:
+            #     self.first_step_out = (next_state_out, reward_out)
+            #     self.first_step_lstm_state = lstm_state
+
+        self.final_lstm_state = lstm_state
+
+        with tf.name_scope('wrap_out'):
+            net_unwrap = tf.stack(net_unwrap)
+            self.output = tf.transpose(net_unwrap, [1, 0, 2, 3, 4])
+
+            if self.config.predict_reward:
+                reward_unwrap = tf.stack(reward_unwrap)
+                self.reward_output = tf.stack(reward_unwrap)
+
+        with tf.name_scope('loss'):
+            # state loss
+            self.states_loss = tf.losses.mean_squared_error(self.y, self.output)
+            # adding reward loss
+            if self.config.predict_reward:
+                self.reward_loss = tf.losses.mean_squared_error(self.reward_output, self.rewards)
+                self.loss = self.states_loss + self.reward_loss
+
+        # for batchnorm layers
+        extra_update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+        with tf.control_dependencies(extra_update_ops):
+            # RMSProp as in paper
+            self.train_step = tf.train.RMSPropOptimizer(self.config.learning_rate).minimize(self.loss)
+
+
+    def build_inference_model(self):
         net_unwrap = []
         reward_unwrap = []
         network_template = tf.make_template('network', self.template)
