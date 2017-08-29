@@ -9,7 +9,7 @@ class Rollout:
     @staticmethod
     def policy_template(scope, observation, num_actions):
         def template():
-            with tf.name_scope(scope):
+            with tf.variable_scope(scope):
                 conv1 = conv2d('conv1', observation, num_filters=32, kernel_size=(8, 8),
                                padding='VALID', stride=(4, 4),
                                initializer=orthogonal_initializer(np.sqrt(2)), activation=tf.nn.relu,
@@ -42,10 +42,11 @@ class Rollout:
         return template
 
     @staticmethod
-    def loss(behavioural_policy, rollout_policy):
+    def loss(scope, behavioural_policy, rollout_policy):
         # Apply the rollout auxillary loss handler.
         def calc_loss():
-            ep = 1e-6
-            return tf.reduce_mean(-tf.reduce_sum(behavioural_policy * tf.log(rollout_policy + ep), axis=-1))
+            with tf.name_scope(scope):
+                ep = 1e-6
+                return tf.reduce_mean(-tf.reduce_sum(behavioural_policy * tf.log(rollout_policy + ep), axis=-1))
 
         return calc_loss
