@@ -2,7 +2,7 @@ import numpy as np
 import tensorflow as tf
 from gp.layers.utils import orthogonal_initializer
 from gp.layers.convolution import conv2d
-from gp.layers.dense import flatten, dense
+from gp.layers.dense import flatten
 
 
 class A2CCNN:
