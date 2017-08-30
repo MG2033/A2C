@@ -151,15 +151,18 @@ class RESModel:
 
         lstm_state = tf.contrib.rnn.LSTMStateTuple(self.initial_lstm_state[0], self.initial_lstm_state[1])
         for i in range(self.config.truncated_time_steps):
-            next_state_out, reward_out, lstm_state = network_template(self.x[:, i, :], self.actions[:, i], lstm_state)
+            if i > self.config.observation_steps_length:
+                state_out, reward_out, lstm_state = network_template(state_out, self.actions[:, i], lstm_state)
+            else:
+                state_out, reward_out, lstm_state = network_template(self.x[:, i, :], self.actions[:, i],lstm_state)
 
             if self.config.predict_reward:
                 reward_unwrap.append(reward_out)
                 # the resize is just temp sol until calculate conv_deconv stuff
                 # net_unwrap.append(tf.image.resize_images(next_state_out, (256, 160)))
-                net_unwrap.append(next_state_out)
+                net_unwrap.append(state_out)
             else:
-                net_unwrap.append(next_state_out)
+                net_unwrap.append(state_out)
 
                 # if i == 0:
                 #     self.first_step_out = (next_state_out, reward_out)
