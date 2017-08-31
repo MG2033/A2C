@@ -35,7 +35,6 @@ init = tf.global_variables_initializer()
 
 sess.run(init)
 
-
 logger = Logger(sess, summary_dir)
 
 out, summary = sess.run([output, merged], {obs_placeholder: obs_arr, rewards_placeholder: r_arr})
