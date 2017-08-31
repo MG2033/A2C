@@ -2,7 +2,7 @@ class I2AConfig:
     # input config
     frame_w, frame_h, frame_c = 15, 19, 3
     actions_num = 4
-    action_space=[0,1,2,3]
+    action_space = [0, 1, 2, 3]
     # trainig config
     batch_size = None
     rollouts_steps = 5

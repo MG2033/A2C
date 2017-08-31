@@ -1,4 +1,5 @@
 import tensorflow as tf
+from gp.logger.logger import Logger
 import numpy as np
 
 
@@ -36,6 +37,8 @@ class RolloutsEncoder:
                     kernel_initializer=tf.contrib.layers.xavier_initializer(),
                     name='conv_{0}'.format(i + 1))
 
+                Logger.summarize_layer(x, 'rollout_encoder')
+
             return x
 
     def __template(self, observations, rewards, lstm_state):
@@ -58,6 +61,8 @@ class RolloutsEncoder:
         lstm = tf.contrib.rnn.BasicLSTMCell(self.__config.lstm_units)
         lstm_output, lstm_next_state = lstm(lstm_input, lstm_state)
 
+        Logger.summarize_layer(lstm_output, 'rollout_encoder')
+
         return lstm_output, lstm_next_state
 
     def __build_model(self):
@@ -76,4 +81,4 @@ class RolloutsEncoder:
             self.__output = tf.transpose(net_unwrap, [1, 0, 2])
             self.__output = tf.reshape(self.__output, [self.__config.actions_num, -1])
 
-        return self.__output
+        return self.__output, tf.summary.merge_all('rollout_encoder')
