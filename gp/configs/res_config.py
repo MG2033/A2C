@@ -12,7 +12,7 @@ class ResConfig:
     max_to_keep = 5  # checkpoints
     load = True
     predict_reward = True
-
+    observation_setps_length=7
     #training configs
     nit_epoch = 5
     n_epochs = 1500
