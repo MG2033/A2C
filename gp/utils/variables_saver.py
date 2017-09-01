@@ -20,7 +20,7 @@ class VariablesSaver:
         for variable in variables:
             for key, value in dict.items():
                 if key in variable.name:
-                    tf.assign(variable, value)
+                    self.__sess.run(tf.assign(variable, value))
                     print("Variable: " + key + " loaded")
 
     def __save_obj(self, obj, name):
