@@ -5,4 +5,6 @@ from gp.i2a.imagination_core.rollout_policy import RolloutPolicy
 from gp.i2a.imagination_core.rollout import Rollout
 
 
-
+class I2a:
+    def __init__(self):
+        pass
