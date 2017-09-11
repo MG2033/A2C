@@ -73,7 +73,7 @@ class RolloutsEncoder:
         lstm_state = tf.zeros([2, self.__config.actions_num, self.__config.lstm_units])
         lstm_state = tf.contrib.rnn.LSTMStateTuple(lstm_state[0], lstm_state[1])
 
-        for i in range(self.__config.rollouts_steps):
+        for i in range(self.__config.rollouts_steps - 1, -1, -1):
             step_output, lstm_state = encoder_template(self.__rollouts_observations[:, i], self.__rollouts_rewards[:, i], lstm_state)
 
         self.__output = tf.reshape(step_output, [-1])
