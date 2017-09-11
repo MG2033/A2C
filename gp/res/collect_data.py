@@ -3,22 +3,23 @@ import numpy as np
 from tqdm import tqdm
 import tensorflow as tf
 import gym
+from gp.a2c.a2c import A2C
 
 FLAGS = tf.app.flags.FLAGS
 tf.app.flags.DEFINE_string('save_dir', "/shared/oabdelta/new-torcs-data/", """ directory to save to """)
-tf.app.flags.DEFINE_integer('episodes', 2500, """ number of episodes """)
+tf.app.flags.DEFINE_integer('episodes', 50, """ number of episodes """)
 tf.app.flags.DEFINE_integer('episode_len', 45, """ number of episode steps """)
-tf.app.flags.DEFINE_integer('max_episode_len', 2000, """ number of episode steps """)
+tf.app.flags.DEFINE_integer('max_episode_len', 500, """ number of episode steps """)
 
 
 class Collector:
     def __init__(self, env_id, policy):
         create_dirs([FLAGS.save_dir])
         self.env = gym.make(env_id)
-        self.action_dims = self.env.observation_space.n
+        self.action_dims = self.env.action_space.n
         self.state_size = self.env.observation_space.shape
 
-        self.states = np.zeros((FLAGS.episodes, FLAGS.episode_len + 1, self.state_size))
+        self.states = np.zeros((FLAGS.episodes, FLAGS.episode_len + 1) + self.state_size)
         self.rewards = np.zeros((FLAGS.episodes, FLAGS.episode_len))
         self.actions = np.zeros((FLAGS.episodes, FLAGS.episode_len))
         self.action_space = np.arange(self.action_dims)
@@ -30,7 +31,7 @@ class Collector:
 
         epsd = 0
         while epsd < FLAGS.episodes:
-            states = np.zeros((FLAGS.max_episode_len + 1, self.state_size))
+            states = np.zeros((FLAGS.max_episode_len + 1,) + self.state_size)
             rewards = np.zeros((FLAGS.max_episode_len))
             actions = np.zeros((FLAGS.max_episode_len))
             print('episode: ', epsd)
@@ -38,8 +39,9 @@ class Collector:
                 policy_action = self.policy(ob)
                 action = self.action_space[policy_action]
 
-                states[step, :] = ob.track
                 # print(action)
+                self.env.render()
+
                 ob, reward, done, _ = self.env.step([action])
                 rewards[step] = reward
                 # print(reward)
@@ -66,9 +68,9 @@ class Collector:
 
 
 def main(_):
-    env_id = ''
-    policy = None
-    data_collector = Collector(env_id, policy)
+    env_id = 'PongNoFrameskip-v4'
+    a2c = A2C()
+    data_collector = Collector(env_id, a2c.infer)
 
     data_collector.collect_data()
 

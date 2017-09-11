@@ -34,7 +34,6 @@ class Rollout:
         for i in range(self.config.rollouts_steps):
             observations, rewards, lstm_states = rollout_res_network(observations, actions,
                                                                      lstm_states)
-
             observations_unwrap.append(observations)
             rewards_unwrap.append(rewards)
             actions_prob = rollout_policy_network(observations)

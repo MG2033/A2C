@@ -4,9 +4,9 @@ from gp.utils.utils import create_experiment_dirs
 
 
 class A2CConfig:
-    num_envs = 4
+    num_envs = 1
     env_class = GymEnv
-    env_name = "BreakoutNoFrameskip-v4"
+    env_name = "PongNoFrameskip-v4"
     env_seed = 42
     policy_class = CNNPolicy
     unroll_time_steps = 5

@@ -45,7 +45,8 @@ class A2C:
     def test(self, total_timesteps):
         print('Testing...')
         try:
-            env = self.__make_all_environments(num_envs=1, env_class=GymEnv, env_name=A2CConfig.env_name, seed=A2CConfig.env_seed)
+            env = self.__make_all_environments(num_envs=1, env_class=GymEnv, env_name=A2CConfig.env_name,
+                                               seed=A2CConfig.env_seed)
             if A2CConfig.record_video_every != -1:
                 env.monitor(is_monitor=True, is_train=False, experiment_dir=A2CConfig.experiment_dir,
                             record_video_every=A2CConfig.record_video_every)
@@ -69,14 +70,12 @@ class A2C:
         action, value, states = self.model.step_policy.step(observation, states, dones)
         return action, value
 
-
     # The reason behind this design pattern is to pass the function handler when required after serialization.
     def __env_maker(self, env_class, env_name, i, seed):
         def __make_env():
             return env_class(env_name, i, seed)
 
         return __make_env
-
 
     def __make_all_environments(self, num_envs=4, env_class=GymEnv, env_name="SpaceInvaders", seed=42):
         set_all_global_seeds(seed)
@@ -88,4 +87,4 @@ class A2C:
 if __name__ == '__main__':
     a2c = A2C()
     a2c.train()
-    #a2c.test(total_timesteps=10000000)
+    # a2c.test(total_timesteps=10000000)
