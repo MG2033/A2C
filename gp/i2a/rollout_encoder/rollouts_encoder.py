@@ -18,6 +18,8 @@ class RolloutsEncoder:
 
         self.rollout_encoding = self.__build_model()
 
+        self.summaries = tf.summary.merge_all('rollout_encoder')
+
     def __cnn_encoder(self, x):
         """
         a cnn encoder block with fc layer
@@ -66,7 +68,6 @@ class RolloutsEncoder:
         return lstm_output, lstm_next_state
 
     def __build_model(self):
-        net_unwrap = []
         encoder_template = tf.make_template('encoder', self.__template)
 
         lstm_state = tf.zeros([2, self.__config.actions_num, self.__config.lstm_units])
@@ -74,11 +75,7 @@ class RolloutsEncoder:
 
         for i in range(self.__config.rollouts_steps):
             step_output, lstm_state = encoder_template(self.__rollouts_observations[:, i], self.__rollouts_rewards[:, i], lstm_state)
-            net_unwrap.append(step_output)
 
-        with tf.name_scope('wrap_out'):
-            net_unwrap = tf.stack(net_unwrap)
-            self.__output = tf.transpose(net_unwrap, [1, 0, 2])
-            self.__output = tf.reshape(self.__output, [self.__config.actions_num, -1])
+        self.__output = tf.reshape(step_output, [-1])
 
-        return self.__output, tf.summary.merge_all('rollout_encoder')
+        return self.__output
