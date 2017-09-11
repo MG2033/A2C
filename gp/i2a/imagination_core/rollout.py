@@ -38,11 +38,11 @@ class Rollout:
             observations_unwrap.append(observations)
             rewards_unwrap.append(rewards)
             actions_prob = rollout_policy_network(observations)
-            actions = tf.arg_max(actions_prob)
+            actions = tf.arg_max(actions_prob,1)
 
         observations_unwrap = tf.stack(observations_unwrap)
         rewards_unwrap = tf.stack(rewards_unwrap)
 
         self.imagined_observations = tf.transpose(observations_unwrap, [1, 0, 2, 3, 4])
         self.imagined_rewards = tf.transpose(rewards_unwrap, [1, 0, 2])
-        return self.imagined_observations, self.imagined_rewards, self.rollout_actions_prob
+        # return self.imagined_observations,self.imagined_rewards,self.rollout_actions_prob
