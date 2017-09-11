@@ -4,13 +4,14 @@ from gp.res.model import RESModel
 import numpy as np
 from gp.configs.res_config import ResConfig
 
+
 class Rollout:
     def __init__(self, observation, lstm_state, config):
         self.config = config
         self.observation = observation
-        res_config=ResConfig()
+        res_config = ResConfig()
         res_model = RESModel(res_config)
-        self.res_templete = res_model.template()
+        self.res_templete = res_model.template
         self.policy_templete = RolloutPolicy.policy_template('rollout_policy', config.actions_num)
         self.initial_lstm_state = lstm_state
         self.next_lstm_states = []
@@ -45,4 +46,4 @@ class Rollout:
 
         self.imagined_observations = tf.transpose(observations_unwrap, [1, 0, 2, 3, 4])
         self.imagined_rewards = tf.transpose(rewards_unwrap, [1, 0, 2])
-        return self.imagined_observations,self.imagined_rewards,self.rollout_actions_prob
+        return self.imagined_observations, self.imagined_rewards, self.rollout_actions_prob
