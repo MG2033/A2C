@@ -23,4 +23,4 @@ sess.run(init)
 
 out = sess.run(output, {obs_placeholder: obs_arr, rewards_placeholder: r_arr})
 
-print(out.shape)
+print(out[0].shape)

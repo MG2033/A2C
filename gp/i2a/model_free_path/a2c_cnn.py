@@ -6,8 +6,8 @@ from gp.layers.dense import flatten
 
 
 class A2CCNN:
-    def __init__(self, scope, observation):
-        with tf.variable_scope(scope):
+    def __init__(self, observation):
+        with tf.variable_scope('a2c_cnn'):
             conv1 = conv2d('conv1', observation, num_filters=32, kernel_size=(8, 8),
                            padding='VALID', stride=(4, 4),
                            initializer=orthogonal_initializer(np.sqrt(2)), activation=tf.nn.relu,
