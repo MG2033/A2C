@@ -8,7 +8,7 @@ from gp.utils.utils import create_dirs
 
 FLAGS = tf.app.flags.FLAGS
 tf.app.flags.DEFINE_string('save_dir', "./data/", """ directory to save to """)
-tf.app.flags.DEFINE_integer('episodes', 1000, """ number of episodes """)
+tf.app.flags.DEFINE_integer('episodes', 50, """ number of episodes """)
 tf.app.flags.DEFINE_integer('episode_len', 45, """ number of episode steps """)
 tf.app.flags.DEFINE_integer('max_episode_len', 5001, """ number of episode steps """)
 import matplotlib.pyplot as plt
@@ -46,7 +46,7 @@ class Collector:
                 action = self.action_space[policy_action]
 
                 # print(action)
-                # self.env.render()
+                self.env.render()
 
                 new_ob, reward, done, _ = self.env.step([action])
                 states[step]=new_ob[0]

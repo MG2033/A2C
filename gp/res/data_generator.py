@@ -1,5 +1,5 @@
 import numpy as np
-
+import cv2
 
 class GenerateData:
     def __init__(self, config):
@@ -8,12 +8,15 @@ class GenerateData:
         :param config: configuration
         """
         np.random.seed(2)
-        x = np.load(config.x_path)
+        x = np.load(config.states_path)
         self.rewards = np.load(config.rewards_path)
 
         np.random.shuffle(x)  # -----------------
         self.y = x[:, 1:]
         self.x = x[:, :-1]
+
+        self.x=self.prepare_states(self.x)
+        self.y=self.prepare_states(self.y)
 
         np.random.shuffle(self.rewards)  # -----------------
         self.actions = None
@@ -61,4 +64,13 @@ class GenerateData:
             (self.config.num_episodes, self.config.episode_length, self.config.action_dim))
         actions = np.int32(np.load(self.config.actions_path))
         np.random.shuffle(actions)  # -----------------
-        self.actions[:, actions[:self.config.num_episodes]] = 1
+        self.actions[:, actions[:self.config.num_episodes]] = 14
+
+    def prepare_states(self,x,env_id='Pong'):
+        new_x=np.zeros((x.shape[0],x.shape[1],96,96,1))
+        for i in range(x.shape[0]):
+            for j in range(x.shape[1]):
+                retval2, threshold = cv2.threshold(x[i, j,:,:,0].astype('uint8'), 89, 255, cv2.THRESH_BINARY)
+                threshold=threshold.astype('uint8')//255
+                new_x[i,j,:,:,0]=cv2.resize(threshold,(96,96))
+        return new_x

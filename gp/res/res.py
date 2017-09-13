@@ -2,7 +2,12 @@ from gp.configs.res_config import ResConfig
 from gp.res.model import RESModel
 from gp.res.data_generator import GenerateData
 from gp.res.train import Trainer
+import tensorflow as tf
 
+
+FLAGS = tf.app.flags.FLAGS
+tf.app.flags.DEFINE_boolean('is_train', True, """ Whether it is a training or testing""")
+tf.app.flags.DEFINE_boolean('cont_train', False , """ whether to Load the Model and Continue Training or not """)
 
 class Res:
     def __init__(self, sess):
@@ -18,3 +23,21 @@ class Res:
 
     def train(self):
         self.trainer.train()
+
+
+
+
+
+def main(_):
+    init = tf.global_variables_initializer()
+
+    sess = tf.Session()
+    sess.run(init)
+    res = Res(sess)
+
+    res.train()
+
+    if FLAGS.is_train:
+        res.train()
+if __name__ == '__main__':
+    tf.app.run()

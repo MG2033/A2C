@@ -114,7 +114,7 @@ class RESModel:
                                      name='dropout')
 
         with tf.name_scope('decoder_5'):
-            next_state_out = tf.layers.conv2d(drp9, 3, kernel_size=(3, 3), strides=(1, 1),
+            next_state_out = tf.layers.conv2d(drp9, 1, kernel_size=(3, 3), strides=(1, 1),
                                               kernel_initializer=tf.contrib.layers.xavier_initializer(), padding='SAME')
 
         if self.config.predict_reward:
@@ -132,7 +132,7 @@ class RESModel:
         else:
             reward_out = None
 
-        # # print encoder_decoder layers shape for debugging
+        # print encoder_decoder layers shape for debugging
         # print(drp1.get_shape().as_list())
         # print(drp2.get_shape().as_list())
         # print(drp3.get_shape().as_list())
@@ -177,6 +177,7 @@ class RESModel:
             if self.config.predict_reward:
                 reward_unwrap = tf.stack(reward_unwrap)
                 self.reward_output = tf.stack(reward_unwrap)
+                self.reward_output = tf.transpose(self.reward_output, [1, 0, 2])
 
         with tf.name_scope('loss'):
             # state loss
