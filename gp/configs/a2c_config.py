@@ -14,10 +14,17 @@ class A2CConfig:
     num_iterations = 4e6
     learning_rate = 7e-4
     reward_discount_factor = 0.99
-    max_to_keep = 10
-    experiment_dir = "experiment_1"
+    max_to_keep = 4
+    experiment_dir = "experiment_pong"
     is_train = True
     load = True
+
+    # env_name="BreakoutNoFrameskip-v4"
+    # max_to_keep = 4
+    # experiment_dir = "experiment_1"
+    # num_iterations = 10e6
+
+
 
     # If this equals -1, it means don't record
     record_video_every = -1

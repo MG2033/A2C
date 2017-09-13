@@ -5,13 +5,13 @@ from gp.configs.a2c_config import A2CConfig
 
 
 class Model:
-    def __init__(self, sess, observation_space, action_space,
+    def __init__(self, sess, observation_space_params, num_actions,
                  entropy_coef=0.01, value_function_coeff=0.5, max_gradient_norm=0.5,
                  optimizer_params=None):
-        self.num_actions = action_space.n
+        self.num_actions = num_actions
         self.train_batch_size = A2CConfig.num_envs * A2CConfig.unroll_time_steps
         self.num_steps = A2CConfig.unroll_time_steps
-        self.img_height, self.img_width, self.num_classes = observation_space.shape
+        self.img_height, self.img_width, self.num_classes = observation_space_params
 
         self.num_stack = A2CConfig.num_stack
         self.actions = None

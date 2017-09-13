@@ -5,10 +5,11 @@ from gp.utils.utils import set_all_global_seeds
 from gp.a2c.models.model import Model
 from gp.a2c.train.train import Trainer
 from gp.configs.a2c_config import A2CConfig
+import pickle
 
 
 class A2C:
-    def __init__(self):
+    def __init__(self, inference=True):
         tf.reset_default_graph()
 
         # gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.95)
@@ -18,19 +19,49 @@ class A2C:
         config.gpu_options.allow_growth = True
         sess = tf.Session(config=config)
 
-        self.env = self.__make_all_environments(A2CConfig.num_envs, A2CConfig.env_class, A2CConfig.env_name,
-                                                A2CConfig.env_seed)
-        self.model = Model(sess, self.env.observation_space, self.env.action_space,
-                           optimizer_params={
-                               'learning_rate': A2CConfig.learning_rate, 'alpha': 0.99, 'epsilon': 1e-5})
+        if not inference:
+            self.env = self.make_all_environments(A2CConfig.num_envs, A2CConfig.env_class, A2CConfig.env_name,
+                                                  A2CConfig.env_seed)
 
-        print("\n\nBuilding the model...")
-        self.model.build()
-        print("Model is built successfully\n\n")
+            self.model = Model(sess, self.env.observation_space.shape, self.env.action_space.n,
+                               optimizer_params={
+                                   'learning_rate': A2CConfig.learning_rate, 'alpha': 0.99, 'epsilon': 1e-5})
 
-        self.trainer = Trainer(sess, self.env, self.model)
+            with open(A2CConfig.experiment_dir + 'env_data.pkl', 'wb') as f:
+                pickle.dump((self.env.observation_space.shape, self.env.action_space.n), f, pickle.HIGHEST_PROTOCOL)
 
-    def train(self):
+            print("\n\nBuilding the model...")
+            self.model.build()
+            print("Model is built successfully\n\n")
+
+            self.trainer = Trainer(sess, self.env, self.model)
+            self.train = self.__train
+
+        else:
+            try:
+                with open(A2CConfig.experiment_dir + 'env_data.pkl', 'rb') as f:
+                    observation_space_shape, action_space_n = pickle.load(f)
+                self.model = Model(sess, observation_space_shape, action_space_n,
+                                   optimizer_params={
+                                       'learning_rate': A2CConfig.learning_rate, 'alpha': 0.99, 'epsilon': 1e-5})
+
+                print("\n\nBuilding the model...")
+                self.model.build()
+                print("Model is built successfully\n\n")
+
+                latest_checkpoint = tf.train.latest_checkpoint(A2CConfig.checkpoint_dir)
+                self.saver = tf.train.Saver(max_to_keep=A2CConfig.max_to_keep)
+                if latest_checkpoint:
+                    print("Loading model checkpoint {} ...\n".format(latest_checkpoint))
+                    self.saver.restore(sess, latest_checkpoint)
+                    print("Model loaded")
+
+                self.test = self.__test
+                self.infer = self.__infer
+            except:
+                print("Environment or checkpoint data not found. Make sure that env_data.pkl is present in the experiment")
+
+    def __train(self):
         print('Training...')
         try:
             if A2CConfig.record_video_every != -1:
@@ -42,11 +73,11 @@ class A2C:
             self.trainer.save()
             self.env.close()
 
-    def test(self, total_timesteps):
+    def __test(self, total_timesteps):
         print('Testing...')
         try:
-            env = self.__make_all_environments(num_envs=1, env_class=GymEnv, env_name=A2CConfig.env_name,
-                                               seed=A2CConfig.env_seed)
+            env = self.make_all_environments(num_envs=1, env_class=GymEnv, env_name=A2CConfig.env_name,
+                                             seed=A2CConfig.env_seed)
             if A2CConfig.record_video_every != -1:
                 env.monitor(is_monitor=True, is_train=False, experiment_dir=A2CConfig.experiment_dir,
                             record_video_every=A2CConfig.record_video_every)
@@ -58,7 +89,7 @@ class A2C:
             print('Error occured..')
             self.env.close()
 
-    def infer(self, observation):
+    def __infer(self, observation):
         """Used for inference.
         :param observation: (tf.tensor) having the shape (None,img_height,img_width,num_classes*num_stack)
         :return action after noise and argmax
@@ -77,7 +108,7 @@ class A2C:
 
         return __make_env
 
-    def __make_all_environments(self, num_envs=4, env_class=GymEnv, env_name="SpaceInvaders", seed=42):
+    def make_all_environments(self, num_envs=4, env_class=GymEnv, env_name="SpaceInvaders", seed=42):
         set_all_global_seeds(seed)
 
         return SubprocVecEnv(
@@ -85,6 +116,6 @@ class A2C:
 
 
 if __name__ == '__main__':
-    a2c = A2C()
+    a2c = A2C(inference=False)
     a2c.train()
     # a2c.test(total_timesteps=10000000)
