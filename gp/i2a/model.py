@@ -22,7 +22,6 @@ class I2a:
         h2 = tf.layers.dense(h1, 256, kernel_initializer=tf.contrib.layers.xavier_initializer())
         output = tf.layers.dense(h2, self.config.actions_num + 1,
                                  kernel_initializer=tf.contrib.layers.xavier_initializer())
-
         return output[:-1], output[-1]
 
     def build_model(self):
