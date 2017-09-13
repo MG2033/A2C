@@ -24,3 +24,7 @@ class BaseEnv:
 
     def monitor(self, is_monitor, is_train, video_record_dir="", record_video_every=10):
         raise NotImplementedError("monitor method is not implemented")
+
+    def render(self):
+        raise NotImplementedError("render method is not implemented")
+

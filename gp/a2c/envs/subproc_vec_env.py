@@ -25,6 +25,8 @@ def worker(remote, env_fn_wrapper):
         elif cmd == 'monitor':
             is_monitor, is_train, experiment_dir, record_video_every = data
             env.monitor(is_monitor, is_train, experiment_dir, record_video_every)
+        elif cmd == 'render':
+            env.render()
         else:
             raise NotImplementedError
 
@@ -82,6 +84,10 @@ class SubprocVecEnv():
     def monitor(self, is_monitor=True, is_train=True, experiment_dir="", record_video_every=10):
         for remote in self.remotes:
             remote.send(('monitor', (is_monitor, is_train, experiment_dir, record_video_every)))
+
+    def render(self):
+        for remote in self.remotes:
+            remote.send(('render', None))
 
     @property
     def num_envs(self):

@@ -32,3 +32,6 @@ class GymEnv(BaseEnv):
 
     def get_observation_space(self):
         return self.env.observation_space
+
+    def render(self):
+        self.gym_env.render()
