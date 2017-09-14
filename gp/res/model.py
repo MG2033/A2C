@@ -123,7 +123,7 @@ class RESModel:
             next_state_out = tf.layers.conv2d(drp9, 1, kernel_size=(3, 3), strides=(1, 1),
                                               kernel_initializer=tf.contrib.layers.xavier_initializer(), padding='SAME')
             next_state_out_softmax = tf.nn.softmax(next_state_out)
-            next_state_out_softmax += tf.floor(tf.constant(0.5))
+            # next_state_out_softmax += tf.floor(tf.constant(0.5))
         if self.config.predict_reward:
             with tf.name_scope('reward_flatten'):
                 flattened_drp7 = tf.contrib.layers.flatten(drp7)
