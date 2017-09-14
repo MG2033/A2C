@@ -67,8 +67,8 @@ class Trainer(BaseTrainer):
             self.save()
 
             if cur_epoch % self.config.test_every == 0:
-                self.test(cur_it)
-
+                # self.test(cur_it)
+                print("oooh")
         print("Training Finished")
 
     def test(self, cur_it):
