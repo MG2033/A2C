@@ -10,7 +10,7 @@ class ResConfig:
     action_dim = 3
     learning_rate = .00001
     max_to_keep = 5  # checkpoints
-    load = False
+    load = True
     is_train = True
     predict_reward = True
     # training configs
