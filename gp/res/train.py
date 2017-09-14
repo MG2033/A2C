@@ -36,7 +36,7 @@ class Trainer(BaseTrainer):
                         [self.model.output, self.model.train_step, self.model.loss,
                          self.model.final_lstm_state], feed_dict)
 
-                    if cur_iterations % 50 == 0:
+                    if cur_iterations % 17 == 0:
                         images = np.concatenate((batch_x[:, 5], out[:, 5]), axis=2)
                         summaries_dict = {'train_images': images}
                         self.add_image_summary(cur_it, summaries_dict=summaries_dict,
