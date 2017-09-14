@@ -15,7 +15,7 @@ class ResConfig:
     predict_reward = True
     # training configs
     nit_epoch = 18
-    n_epochs = 1500
+    n_epochs = 10000
     num_episodes_train = 40
     num_episodes_test = 10
     num_episodes = 50
@@ -26,11 +26,13 @@ class ResConfig:
     env_id = 'Pong'
     # summaries configs
     scalar_summary_tags = ['loss', 'test_MSE']
-    #test
-    test_steps=10
+    # test
+    test_steps = 10
     # paths configs
     checkpoint_dir = './experiments/checkpoints/checkpoints'
     states_path = './data/states.npy'
     actions_path = './data/actions.npy'
     rewards_path = './data/rewards.npy'
     summary_dir = "./experiments/summaries"
+
+    save_every = 10

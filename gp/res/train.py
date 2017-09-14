@@ -62,7 +62,8 @@ class Trainer(BaseTrainer):
                                           feed_dict={self.cur_epoch_input: self.cur_epoch_tensor.eval(self.sess) + 1})
 
             # Save the current checkpoint
-            self.save()
+            if cur_epoch % self.config.save_every == 0:
+                self.save()
 
             if cur_epoch % self.config.test_every == 0:
                 # self.test(cur_it)

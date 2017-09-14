@@ -122,9 +122,8 @@ class RESModel:
         with tf.name_scope('decoder_5'):
             next_state_out = tf.layers.conv2d(drp9, 1, kernel_size=(3, 3), strides=(1, 1),
                                               kernel_initializer=tf.contrib.layers.xavier_initializer(), padding='SAME')
-            next_state_out_softmax = tf.nn.sigmoid(next_state_out)
-
-
+            next_state_out_sigmoid = tf.nn.sigmoid(next_state_out)
+            next_state_out_argmax = tf.floor(next_state_out_sigmoid+tf.constant(0.5))
             # next_state_out_softmax += tf.floor(tf.constant(0.5))
         if self.config.predict_reward:
             with tf.name_scope('reward_flatten'):
@@ -151,7 +150,7 @@ class RESModel:
         # print(drp8.get_shape().as_list())
         # print(next_state_out.get_shape().as_list())
 
-        return next_state_out, next_state_out_softmax, reward_out, lstm_new_state
+        return next_state_out, next_state_out_argmax, reward_out, lstm_new_state
 
     def build_model(self):
         net_unwrap = []
@@ -161,11 +160,11 @@ class RESModel:
         lstm_state = tf.contrib.rnn.LSTMStateTuple(self.initial_lstm_state[0], self.initial_lstm_state[1])
         for i in range(self.config.truncated_time_steps):
             if i >= self.config.observation_steps_length:
-                state_out, state_out_softmax, reward_out, lstm_state = self.network_template(state_out_softmax,
+                state_out, next_state_out_argmax, reward_out, lstm_state = self.network_template(next_state_out_argmax,
                                                                                              self.actions[:, i],
                                                                                              lstm_state)
             else:
-                state_out, state_out_softmax, reward_out, lstm_state = self.network_template(self.x[:, i, :],
+                state_out, next_state_out_argmax, reward_out, lstm_state = self.network_template(self.x[:, i, :],
                                                                                              self.actions[:, i],
                                                                                              lstm_state)
 
