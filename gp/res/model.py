@@ -182,7 +182,8 @@ class RESModel:
         with tf.name_scope('wrap_out'):
             net_unwrap = tf.stack(net_unwrap)
             self.output = tf.transpose(net_unwrap, [1, 0, 2, 3, 4])
-
+            print(self.output.get_shape())
+            print(self.y.get_shape())
             if self.config.predict_reward:
                 reward_unwrap = tf.stack(reward_unwrap)
                 self.reward_output = tf.stack(reward_unwrap)
