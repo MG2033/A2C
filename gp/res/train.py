@@ -33,12 +33,12 @@ class Trainer(BaseTrainer):
                     feed_dict = {self.model.x: batch_x, self.model.y: batch_y, self.model.actions: batch_actions,
                                  self.model.rewards: batch_rewards,
                                  self.model.initial_lstm_state: last_state, self.model.is_training: True}
-                    out, _, loss, last_state = self.sess.run(
-                        [self.model.output, self.model.train_step, self.model.loss,
+                    output_sigmoid, out, _, loss, last_state = self.sess.run(
+                        [self.model.output_sigmoid, self.model.output, self.model.train_step, self.model.loss,
                          self.model.final_lstm_state], feed_dict)
 
                     if cur_iterations % 17 == 0:
-                        images = np.concatenate((batch_x[:, 5], out[:, 5]), axis=2)
+                        images = np.concatenate((batch_x[:, 5], output_sigmoid[:, 5]), axis=2)
                         summaries_dict = {'train_images': images}
                         self.add_image_summary(cur_it, summaries_dict=summaries_dict,
                                                )

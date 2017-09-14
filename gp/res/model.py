@@ -154,6 +154,8 @@ class RESModel:
 
     def build_model(self):
         net_unwrap = []
+        net_sigmoid_unwrap = []
+
         reward_unwrap = []
         self.network_template = tf.make_template('network', self.template)
 
@@ -173,8 +175,10 @@ class RESModel:
                 # the resize is just temp sol until calculate conv_deconv stuff
                 # net_unwrap.append(tf.image.resize_images(next_state_out, (256, 160)))
                 net_unwrap.append(state_out)
+                net_sigmoid_unwrap.append(next_state_out_argmax)
             else:
                 net_unwrap.append(state_out)
+                net_sigmoid_unwrap.append(next_state_out_argmax)
 
                 # if i == 0:
                 #     self.first_step_out = (next_state_out, reward_out)
@@ -183,6 +187,10 @@ class RESModel:
         with tf.name_scope('wrap_out'):
             net_unwrap = tf.stack(net_unwrap)
             self.output = tf.transpose(net_unwrap, [1, 0, 2, 3, 4])
+
+            net_sigmoid_unwrap = tf.stack(net_sigmoid_unwrap)
+            self.output_sigmoid = tf.transpose(net_sigmoid_unwrap, [1, 0, 2, 3, 4])
+
             # print(self.output.get_shape())
             # print(self.y.get_shape())
             if self.config.predict_reward:
