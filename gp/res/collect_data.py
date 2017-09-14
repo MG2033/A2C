@@ -8,10 +8,11 @@ from gp.utils.utils import create_dirs
 
 FLAGS = tf.app.flags.FLAGS
 tf.app.flags.DEFINE_string('save_dir', "./data/", """ directory to save to """)
-tf.app.flags.DEFINE_integer('episodes', 50, """ number of episodes """)
+tf.app.flags.DEFINE_integer('episodes', 500, """ number of episodes """)
 tf.app.flags.DEFINE_integer('episode_len', 45, """ number of episode steps """)
 tf.app.flags.DEFINE_integer('max_episode_len', 5001, """ number of episode steps """)
 import matplotlib.pyplot as plt
+
 
 class Collector:
     def __init__(self, env_id, make_enviroments, policy):
@@ -24,7 +25,7 @@ class Collector:
         self.rewards = np.zeros((FLAGS.episodes, FLAGS.episode_len))
         self.actions = np.zeros((FLAGS.episodes, FLAGS.episode_len))
         self.action_space = np.arange(self.action_dims)
-        self.epsd_cnt=np.zeros((1,))
+        self.epsd_cnt = np.zeros((1,))
         self.policy = policy
 
     def observation_update(self, new_observation, old_observation):
@@ -49,11 +50,11 @@ class Collector:
                 self.env.render()
 
                 new_ob, reward, done, _ = self.env.step([action])
-                states[step]=new_ob[0]
+                states[step] = new_ob[0]
                 rewards[step] = reward
                 actions[step] = action
 
-                #for debugging purposes
+                # for debugging purposes
                 # if step%10 in range(10) :
                 #     plt.imsave('./data_samples/'+str(step)+'jpg',new_ob[0,:,:,0],cmap='gray')
                 # print(reward)
@@ -68,13 +69,12 @@ class Collector:
                         if not epsd < FLAGS.episodes:
                             self.save()
                             return
-                        self.epsd_cnt[0]=epsd
+                        self.epsd_cnt[0] = epsd
                     ob = self.env.reset()
                     ob = np.concatenate((ob, ob, ob, ob), axis=-1)
                     self.save()
 
                     break
-
 
     def save(self):
         np.save(FLAGS.save_dir + 'states.npy', self.states)
@@ -82,18 +82,18 @@ class Collector:
         np.save(FLAGS.save_dir + 'rewards.npy', self.rewards)
         np.save(FLAGS.save_dir + 'epsd_idx.npy', self.epsd_cnt)
 
+        print('data_saved')
 
-        print ('data_saved')
 
 def main(_):
     env_id = 'PongNoFrameskip-v4'
-    a2c = A2C()
+    a2c = A2C(inference=True)
     data_collector = Collector(env_id, a2c.make_all_environments, a2c.infer)
 
     data_collector.collect_data()
 
     data_collector.save()
-    
+
 
 if __name__ == '__main__':
     tf.app.run()

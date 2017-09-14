@@ -60,6 +60,7 @@ class A2C:
                 self.infer = self.__infer
             except:
                 print("Environment or checkpoint data not found. Make sure that env_data.pkl is present in the experiment")
+                exit(1)
 
     def __train(self):
         print('Training...')

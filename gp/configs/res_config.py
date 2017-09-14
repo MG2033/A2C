@@ -26,7 +26,7 @@ class ResConfig:
     # summaries configs
     scalar_summary_tags = ['loss', 'test_MSE']
     #test
-    test_steps=5
+    test_steps=10
     # paths configs
     checkpoint_dir = './experiments/checkpoints/checkpoints'
     states_path = './data/states.npy'
