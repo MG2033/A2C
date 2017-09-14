@@ -30,7 +30,6 @@ class Trainer(BaseTrainer):
                                  self.model.rewards: batch_rewards,
                                  self.model.initial_lstm_state: initial_lstm_state, self.model.is_training: True}
                     last_state = self.sess.run(self.model.final_lstm_state, feed_dict)
-                    print(last_state[0].shape)
                 else:
                     print("not_new")
                     feed_dict = {self.model.x: batch_x, self.model.y: batch_y, self.model.actions: batch_actions,
