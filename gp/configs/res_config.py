@@ -11,6 +11,7 @@ class ResConfig:
     learning_rate = .00001
     max_to_keep = 5  # checkpoints
     load = False
+    is_train = True
     predict_reward = True
     # training configs
     nit_epoch = 18
