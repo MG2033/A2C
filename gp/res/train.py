@@ -38,12 +38,6 @@ class Trainer(BaseTrainer):
                     out, _, loss, last_state = self.sess.run(
                         [self.model.output, self.model.train_step, self.model.loss,
                          self.model.final_lstm_state], feed_dict)
-                    # if cur_iterations % 10 == 0:
-                    #     cur_it = self.global_step_tensor.eval(self.sess)
-                    #
-                    #     train_images = np.concatenate((out[0], batch_x[0]), axis=2)
-                    #     summaries_dict = {'train_images': train_images}
-                    #     self.add_image_summary(cur_it, summaries_dict=summaries_dict)
                     losses.append(loss)
 
                 cur_iterations += 1

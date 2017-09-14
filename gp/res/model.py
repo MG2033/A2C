@@ -23,12 +23,12 @@ class RESModel:
             self.actions = tf.placeholder(tf.float32, [None, self.config.truncated_time_steps, self.config.action_dim],
                                           name='actions')
             # test_input
-            # self.x_test = tf.placeholder(tf.float32, [None] + self.config.state_size,
-            #                              name='states_test')
-            # self.initial_lstm_state_test = tf.placeholder(tf.float32, [2, None, self.config.lstm_size],
-            #                                               name='lstm_state_test')
-            # self.actions_test = tf.placeholder(tf.float32, [None, self.config.action_dim],
-            #                                    name='actions_test')
+            self.x_test = tf.placeholder(tf.float32, [None] + self.config.state_size,
+                                         name='states_test')
+            self.initial_lstm_state_test = tf.placeholder(tf.float32, [2, None, self.config.lstm_size],
+                                                          name='lstm_state_test')
+            self.actions_test = tf.placeholder(tf.float32, [None, self.config.action_dim],
+                                               name='actions_test')
             # ------------------- inferece inputs
 
     def template(self, x, action, lstm_state):
@@ -192,13 +192,13 @@ class RESModel:
                 self.reward_output = tf.transpose(self.reward_output, [1, 0, 2])
 
         # test_model
-        # lstm_state_test = tf.contrib.rnn.LSTMStateTuple(self.initial_lstm_state_test[0],
-        #                                                 self.initial_lstm_state_test[1])
-        #
-        # self.output_test, self.output_softmax_test, self.reward_out_test, self.lstm_state_test = self.network_template(
-        #     self.x_test,
-        #     self.actions_test,
-        #     lstm_state_test)
+        lstm_state_test = tf.contrib.rnn.LSTMStateTuple(self.initial_lstm_state_test[0],
+                                                        self.initial_lstm_state_test[1])
+
+        self.output_test, self.output_softmax_test, self.reward_out_test, self.lstm_state_test = self.network_template(
+            self.x_test,
+            self.actions_test,
+            lstm_state_test)
 
         with tf.name_scope('loss'):
             # state loss
