@@ -17,6 +17,7 @@ class Trainer(BaseTrainer):
             losses = []
             cur_epoch = self.cur_epoch_tensor.eval(self.sess)
             loop = tqdm(self.data.next_batch(), total=self.config.nit_epoch, desc="epoch-" + str(cur_epoch) + "-")
+            cur_it = self.global_step_tensor.eval(self.sess)
 
             for batch_x, batch_y, batch_actions, batch_rewards, new_sequence in loop:
                 # Update the Global step
@@ -48,7 +49,6 @@ class Trainer(BaseTrainer):
                 # finish the epoch
                 if cur_iterations >= self.config.nit_epoch:
                     break
-            cur_it = self.global_step_tensor.eval(self.sess)
             loss = np.mean(losses)
 
             summaries_dict = {'loss': loss}
