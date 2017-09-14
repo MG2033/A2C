@@ -34,7 +34,7 @@ class Trainer(BaseTrainer):
                     print("not_new")
                     feed_dict = {self.model.x: batch_x, self.model.y: batch_y, self.model.actions: batch_actions,
                                  self.model.rewards: batch_rewards,
-                                 self.model.initial_lstm_state: last_state, self.model.is_training: True}
+                                 self.model.initial_lstm_state: initial_lstm_state, self.model.is_training: True}
                     out, _, loss, last_state = self.sess.run(
                         [self.model.output, self.model.train_step, self.model.loss,
                          self.model.final_lstm_state], feed_dict)

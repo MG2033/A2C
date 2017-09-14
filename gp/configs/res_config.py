@@ -10,7 +10,7 @@ class ResConfig:
     action_dim = 3
     learning_rate = .00001
     max_to_keep = 5  # checkpoints
-    load = True
+    load = False
     predict_reward = True
     # training configs
     nit_epoch = 18
