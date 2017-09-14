@@ -44,7 +44,6 @@ class Trainer(BaseTrainer):
                     #     train_images = np.concatenate((out[0], batch_x[0]), axis=2)
                     #     summaries_dict = {'train_images': train_images}
                     #     self.add_image_summary(cur_it, summaries_dict=summaries_dict)
-                    print(last_state.shape)
                     losses.append(loss)
 
                 cur_iterations += 1
