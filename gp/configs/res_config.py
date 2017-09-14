@@ -1,7 +1,7 @@
 class ResConfig:
     # model configs
     predict_reward = True
-    truncated_time_steps = 5
+    truncated_time_steps = 15
     state_size = [96, 96, 1]
     dropout_rate = 0.3
     lstm_size = 1024
@@ -21,7 +21,7 @@ class ResConfig:
     episode_length = 45
     test_every = 1
     epsilon = 0.15
-    observation_steps_length = 100
+    observation_steps_length = 8
     env_id = 'Pong'
     # summaries configs
     scalar_summary_tags = ['loss', 'test_MSE']

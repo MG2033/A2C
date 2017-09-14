@@ -17,7 +17,7 @@ class Res:
         self.sess = sess
         self.config = ResConfig()
         self.model = RESModel(self.config)
-        self.model.build_training_model()
+        self.model.build_model()
         self.data = GenerateData(self.config)
         self.trainer = Trainer(self.sess, self.model, self.data, self.config)
 
@@ -35,7 +35,6 @@ def main(_):
     sess.run(init)
     res = Res(sess)
 
-    res.train()
 
     if FLAGS.is_train:
         res.train()

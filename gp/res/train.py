@@ -66,22 +66,25 @@ class Trainer(BaseTrainer):
             # Save the current checkpoint
             self.save()
 
-            # if cur_epoch % self.config.test_every == 0:
-            #     self.test(cur_it)
+            if cur_epoch % self.config.test_every == 0:
+                self.test(cur_it)
 
         print("Training Finished")
 
     def test(self, cur_it):
         x, a = self.data.sample()
         lstm_state = np.zeros((2, self.config.batch_size, self.config.lstm_size))
-        out = x[0]
-        test_images = np.zeros([self.config.test_steps] + self.config.state_size)
-        for i in range(self.config.test_steps):
-            feed_dict = {self.model.x: out, self.model.actions: a[i],
+        out = x[:, 0]
+        # test_images = np.zeros([self.config.test_steps,self.config.batch_size] + self.config.state_size)
 
-                         self.model.initial_lstm_state: lstm_state, self.model.is_training: False}
-            out, lstm_state = self.sess.run([self.model.output, self.model.final_lstm_state], feed_dict)
-            test_images[i] = out
-        test_images = np.concatenate((test_images, x[:self.config.test_steps]))
-        summaries_dict = {'train_images': test_images}
-        self.add_image_summary(cur_it, summaries_dict=summaries_dict, summaries_merged=self.model.summaries)
+        feed_dict = {self.model.x: out, self.model.actions: a[0],
+                     self.model.initial_lstm_state: lstm_state, self.model.is_training: False}
+        lstm_state = self.sess.run(self.model.final_lstm_state, feed_dict)
+
+        for i in range(1, self.config.test_steps):
+            feed_dict = {self.model.x: out, self.model.actions: a[i],
+                         self.model.lstm_state_test: lstm_state, self.model.is_training: False}
+            out, lstm_state = self.sess.run([self.model.output_test, self.model.lstm_state_test], feed_dict)
+            test_images = np.concatenate(( x[i],out))
+            summaries_dict = {'train_images_'+str(i): test_images}
+            self.add_image_summary(cur_it, summaries_dict=summaries_dict)

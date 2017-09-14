@@ -1,6 +1,7 @@
 import numpy as np
 import cv2
 
+
 class GenerateData:
     def __init__(self, config):
         """
@@ -10,19 +11,23 @@ class GenerateData:
         np.random.seed(2)
         x = np.load(config.states_path)
         self.rewards = np.load(config.rewards_path)
-
-        np.random.shuffle(x)  # -----------------
+        idx = np.arange(x.shape[0])
+        np.random.shuffle(idx)
         self.y = x[:, 1:]
         self.x = x[:, :-1]
 
-        self.x=self.prepare_states(self.x)
-        self.y=self.prepare_states(self.y)
+        self.x = self.prepare_states(self.x)
+        self.y = self.prepare_states(self.y)
 
-        np.random.shuffle(self.rewards)  # -----------------
+        # shuffles
+        self.x = self.x[idx]
+        self.y = self.y[idx]
+        self.rewards = self.rewards[idx]
         self.actions = None
-        self.config = config
+        self.prepare_actions(idx)
 
-        self.prepare_actions()  # -----------------
+        # np.random.shuffle(self.rewards)  # -----------------
+        self.config = config
 
         self.rewards = np.expand_dims(self.rewards, axis=2)
 
@@ -60,21 +65,23 @@ class GenerateData:
                 yield batch_x, batch_y, batch_actions, batch_rewards, new_sequence
 
     def sample(self):
-        rand=np.random.randint(0,self.config.num_episodes)
-        return self.x[rand],self.actions[rand]
+        idx = np.random.choice(self.config.num_episodes_train, self.config.batch_size)
+        return self.x[idx], self.actions[idx]
 
-    def prepare_actions(self):
+    def prepare_actions(self, idx):
         self.actions = np.zeros(
             (self.config.num_episodes, self.config.episode_length, self.config.action_dim))
         actions = np.int32(np.load(self.config.actions_path))
+
         np.random.shuffle(actions)  # -----------------
         self.actions[:, actions[:self.config.num_episodes]] = 14
+        self.actions = self.actions[idx]
 
-    def prepare_states(self,x,env_id='Pong'):
-        new_x=np.zeros((x.shape[0],x.shape[1],96,96,1))
+    def prepare_states(self, x, env_id='Pong'):
+        new_x = np.zeros((x.shape[0], x.shape[1], 96, 96, 1))
         for i in range(x.shape[0]):
             for j in range(x.shape[1]):
-                retval2, threshold = cv2.threshold(x[i, j,:,:,0].astype('uint8'), 89, 255, cv2.THRESH_BINARY)
-                threshold=threshold.astype('uint8')//255
-                new_x[i,j,:,:,0]=cv2.resize(threshold,(96,96))
+                retval2, threshold = cv2.threshold(x[i, j, :, :, 0].astype('uint8'), 89, 255, cv2.THRESH_BINARY)
+                threshold = threshold.astype('uint8') // 255
+                new_x[i, j, :, :, 0] = cv2.resize(threshold, (96, 96))
         return new_x
