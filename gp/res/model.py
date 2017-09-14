@@ -122,7 +122,8 @@ class RESModel:
         with tf.name_scope('decoder_5'):
             next_state_out = tf.layers.conv2d(drp9, 1, kernel_size=(3, 3), strides=(1, 1),
                                               kernel_initializer=tf.contrib.layers.xavier_initializer(), padding='SAME')
-
+            next_state_out_softmax = tf.nn.softmax(next_state_out)
+            next_state_out_softmax += tf.floor(tf.constant(0.5))
         if self.config.predict_reward:
             with tf.name_scope('reward_flatten'):
                 flattened_drp7 = tf.contrib.layers.flatten(drp7)
@@ -148,7 +149,7 @@ class RESModel:
         # print(drp8.get_shape().as_list())
         # print(next_state_out.get_shape().as_list())
 
-        return next_state_out, reward_out, lstm_new_state
+        return next_state_out, next_state_out_softmax, reward_out, lstm_new_state
 
     def build_model(self):
         net_unwrap = []
@@ -158,10 +159,13 @@ class RESModel:
         lstm_state = tf.contrib.rnn.LSTMStateTuple(self.initial_lstm_state[0], self.initial_lstm_state[1])
         for i in range(self.config.truncated_time_steps):
             if i >= self.config.observation_steps_length:
-                state_out, reward_out, lstm_state = self.network_template(state_out, self.actions[:, i], lstm_state)
+                state_out, state_out_softmax, reward_out, lstm_state = self.network_template(state_out_softmax,
+                                                                                             self.actions[:, i],
+                                                                                             lstm_state)
             else:
-                state_out, reward_out, lstm_state = self.network_template(self.x[:, i, :], self.actions[:, i],
-                                                                          lstm_state)
+                state_out, state_out_softmax, reward_out, lstm_state = self.network_template(self.x[:, i, :],
+                                                                                             self.actions[:, i],
+                                                                                             lstm_state)
 
             if self.config.predict_reward:
                 reward_unwrap.append(reward_out)
@@ -188,13 +192,14 @@ class RESModel:
         lstm_state_test = tf.contrib.rnn.LSTMStateTuple(self.initial_lstm_state_test[0],
                                                         self.initial_lstm_state_test[1])
 
-        self.output_test, self.reward_out_test, self.lstm_state_test = self.network_template(self.x_test,
-                                                                                             self.actions_test,
-                                                                                             lstm_state_test)
+        self.output_test, self.output_softmax_test, self.reward_out_test, self.lstm_state_test = self.network_template(
+            self.x_test,
+            self.actions_test,
+            lstm_state_test)
 
         with tf.name_scope('loss'):
             # state loss
-            self.states_loss = tf.losses.mean_squared_error(self.y, self.output)
+            self.states_loss = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=self.output, labels=self.y)
             # adding reward loss
             if self.config.predict_reward:
                 self.reward_loss = tf.losses.mean_squared_error(self.reward_output, self.rewards)
