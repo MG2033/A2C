@@ -19,7 +19,7 @@ class Trainer(BaseTrainer):
             loop = tqdm(self.data.next_batch(), total=self.config.nit_epoch, desc="epoch-" + str(cur_epoch) + "-")
 
             for batch_x, batch_y, batch_actions, batch_rewards, new_sequence in loop:
-
+                print(####ok###)
                 # Update the Global step
                 self.global_step_assign_op.eval(session=self.sess, feed_dict={
                     self.global_step_input: self.global_step_tensor.eval(self.sess) + 1})
