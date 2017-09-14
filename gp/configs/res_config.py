@@ -13,21 +13,22 @@ class ResConfig:
     load = True
     predict_reward = True
     # training configs
-    nit_epoch = 50
+    nit_epoch = 18
     n_epochs = 1500
     num_episodes_train = 40
     num_episodes_test = 10
     num_episodes = 50
     episode_length = 45
-    test_every = 5
+    test_every = 1
     epsilon = 0.15
     observation_steps_length = 100
     env_id = 'Pong'
     # summaries configs
     scalar_summary_tags = ['loss', 'test_MSE']
-
+    #test
+    test_steps=5
     # paths configs
-    checkpoint_dir = './experiments/checkpoints'
+    checkpoint_dir = './experiments/checkpoints/checkpoints'
     states_path = './data/states.npy'
     actions_path = './data/actions.npy'
     rewards_path = './data/rewards.npy'

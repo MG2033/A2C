@@ -108,7 +108,7 @@ class BaseTrainer:
                 self.summary_writer.add_summary(summaries_merged, step)
                 self.summary_writer.flush()
 
-    def add_image_summary(self, step, scope=None, summaries_dict=None):
+    def add_image_summary(self, step, scope='train_images', summaries_dict=None):
         """
         Add the summaries to tensorboard
         :param step:

@@ -37,6 +37,12 @@ class Trainer(BaseTrainer):
                     out, _, loss, last_state = self.sess.run(
                         [self.model.output, self.model.train_step, self.model.loss,
                          self.model.final_lstm_state], feed_dict)
+                    # if cur_iterations % 10 == 0:
+                    #     cur_it = self.global_step_tensor.eval(self.sess)
+                    #
+                    #     train_images = np.concatenate((out[0], batch_x[0]), axis=2)
+                    #     summaries_dict = {'train_images': train_images}
+                    #     self.add_image_summary(cur_it, summaries_dict=summaries_dict)
                     losses.append(loss)
 
                 cur_iterations += 1
@@ -60,10 +66,22 @@ class Trainer(BaseTrainer):
             # Save the current checkpoint
             self.save()
 
-            if cur_epoch % self.config.test_every == 0:
-                self.test(cur_it)
+            # if cur_epoch % self.config.test_every == 0:
+            #     self.test(cur_it)
 
         print("Training Finished")
 
     def test(self, cur_it):
-        pass
+        x, a = self.data.sample()
+        lstm_state = np.zeros((2, self.config.batch_size, self.config.lstm_size))
+        out = x[0]
+        test_images = np.zeros([self.config.test_steps] + self.config.state_size)
+        for i in range(self.config.test_steps):
+            feed_dict = {self.model.x: out, self.model.actions: a[i],
+
+                         self.model.initial_lstm_state: lstm_state, self.model.is_training: False}
+            out, lstm_state = self.sess.run([self.model.output, self.model.final_lstm_state], feed_dict)
+            test_images[i] = out
+        test_images = np.concatenate((test_images, x[:self.config.test_steps]))
+        summaries_dict = {'train_images': test_images}
+        self.add_image_summary(cur_it, summaries_dict=summaries_dict, summaries_merged=self.model.summaries)

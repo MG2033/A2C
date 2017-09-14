@@ -59,6 +59,10 @@ class GenerateData:
                 batch_rewards = self.current_rewards[:, i:i + self.config.truncated_time_steps, :]
                 yield batch_x, batch_y, batch_actions, batch_rewards, new_sequence
 
+    def sample(self):
+        rand=np.random.randint(0,self.config.num_episodes)
+        return self.x[rand],self.actions[rand]
+
     def prepare_actions(self):
         self.actions = np.zeros(
             (self.config.num_episodes, self.config.episode_length, self.config.action_dim))
