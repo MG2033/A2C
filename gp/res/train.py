@@ -77,13 +77,13 @@ class Trainer(BaseTrainer):
         out = x[:, 0]
         # test_images = np.zeros([self.config.test_steps,self.config.batch_size] + self.config.state_size)
 
-        feed_dict = {self.model.x: out, self.model.actions: a[0],
-                     self.model.initial_lstm_state: lstm_state, self.model.is_training: False}
+        feed_dict = {self.model.x_test: out, self.model.actions_test: a[0],
+                     self.model.initial_lstm_state_test: lstm_state, self.model.is_training: False}
         lstm_state = self.sess.run(self.model.final_lstm_state, feed_dict)
 
         for i in range(1, self.config.test_steps):
-            feed_dict = {self.model.x: out, self.model.actions: a[i],
-                         self.model.lstm_state_test: lstm_state, self.model.is_training: False}
+            feed_dict = {self.model.x_test: out, self.model.actions_test: a[i],
+                         self.model.initial_lstm_state_test: lstm_state, self.model.is_training: False}
             out, lstm_state = self.sess.run([self.model.output_softmax_test, self.model.lstm_state_test], feed_dict)
             test_images = np.concatenate(( x[i],out))
             summaries_dict = {'train_images_'+str(i): test_images}

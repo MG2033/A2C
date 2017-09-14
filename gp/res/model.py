@@ -184,8 +184,8 @@ class RESModel:
         with tf.name_scope('wrap_out'):
             net_unwrap = tf.stack(net_unwrap)
             self.output = tf.transpose(net_unwrap, [1, 0, 2, 3, 4])
-            print(self.output.get_shape())
-            print(self.y.get_shape())
+            # print(self.output.get_shape())
+            # print(self.y.get_shape())
             if self.config.predict_reward:
                 reward_unwrap = tf.stack(reward_unwrap)
                 self.reward_output = tf.stack(reward_unwrap)
@@ -202,7 +202,7 @@ class RESModel:
 
         with tf.name_scope('loss'):
             # state loss
-            self.states_loss =tf.nn.sigmoid_cross_entropy_with_logits(logits=self.output, labels=self.y)
+            self.states_loss = tf.nn.sigmoid_cross_entropy_with_logits(logits=self.output, labels=self.y)
             # adding reward loss
             if self.config.predict_reward:
                 self.reward_loss = tf.losses.mean_squared_error(self.reward_output, self.rewards)
