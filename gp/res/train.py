@@ -19,32 +19,35 @@ class Trainer(BaseTrainer):
             loop = tqdm(self.data.next_batch(), total=self.config.nit_epoch, desc="epoch-" + str(cur_epoch) + "-")
 
             for batch_x, batch_y, batch_actions, batch_rewards, new_sequence in loop:
-                print("ooook")
                 # Update the Global step
                 self.global_step_assign_op.eval(session=self.sess, feed_dict={
                     self.global_step_input: self.global_step_tensor.eval(self.sess) + 1})
 
                 if new_sequence:
-                    print("new")
                     feed_dict = {self.model.x: batch_x, self.model.y: batch_y, self.model.actions: batch_actions,
                                  self.model.rewards: batch_rewards,
                                  self.model.initial_lstm_state: initial_lstm_state, self.model.is_training: True}
                     last_state = self.sess.run(self.model.final_lstm_state, feed_dict)
                 else:
-                    print("not_new")
                     feed_dict = {self.model.x: batch_x, self.model.y: batch_y, self.model.actions: batch_actions,
                                  self.model.rewards: batch_rewards,
-                                 self.model.initial_lstm_state: initial_lstm_state, self.model.is_training: True}
+                                 self.model.initial_lstm_state: last_state, self.model.is_training: True}
                     out, _, loss, last_state = self.sess.run(
                         [self.model.output, self.model.train_step, self.model.loss,
                          self.model.final_lstm_state], feed_dict)
+
+                    if cur_iterations % 100 == 0:
+                        images = np.concatenate((batch_x[:, 5], out[:, 5]), axis=2)
+                        summaries_dict = {'train_images': images}
+                        self.add_image_summary(cur_it, summaries_dict=summaries_dict,
+                                               )
+
                     losses.append(loss)
 
                 cur_iterations += 1
                 # finish the epoch
                 if cur_iterations >= self.config.nit_epoch:
                     break
-            print("tttttttttts")
             cur_it = self.global_step_tensor.eval(self.sess)
             loss = np.mean(losses)
 
@@ -80,6 +83,6 @@ class Trainer(BaseTrainer):
             feed_dict = {self.model.x_test: out, self.model.actions_test: a[i],
                          self.model.initial_lstm_state_test: lstm_state, self.model.is_training: False}
             out, lstm_state = self.sess.run([self.model.output_softmax_test, self.model.lstm_state_test], feed_dict)
-            test_images = np.concatenate(( x[i],out))
-            summaries_dict = {'train_images_'+str(i): test_images}
+            test_images = np.concatenate((x[i], out))
+            summaries_dict = {'train_images_' + str(i): test_images}
             self.add_image_summary(cur_it, summaries_dict=summaries_dict)
