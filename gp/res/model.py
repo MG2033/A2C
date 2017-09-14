@@ -122,7 +122,9 @@ class RESModel:
         with tf.name_scope('decoder_5'):
             next_state_out = tf.layers.conv2d(drp9, 1, kernel_size=(3, 3), strides=(1, 1),
                                               kernel_initializer=tf.contrib.layers.xavier_initializer(), padding='SAME')
-            next_state_out_softmax = tf.nn.softmax(next_state_out)
+            next_state_out_softmax = tf.nn.sigmoid(next_state_out)
+
+
             # next_state_out_softmax += tf.floor(tf.constant(0.5))
         if self.config.predict_reward:
             with tf.name_scope('reward_flatten'):
@@ -200,7 +202,7 @@ class RESModel:
 
         with tf.name_scope('loss'):
             # state loss
-            self.states_loss = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=self.output, labels=self.y)
+            self.states_loss =tf.nn.sigmoid_cross_entropy_with_logits(logits=self.output, labels=self.y)
             # adding reward loss
             if self.config.predict_reward:
                 self.reward_loss = tf.losses.mean_squared_error(self.reward_output, self.rewards)
