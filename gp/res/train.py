@@ -25,12 +25,14 @@ class Trainer(BaseTrainer):
                     self.global_step_input: self.global_step_tensor.eval(self.sess) + 1})
 
                 if new_sequence:
+                    print("new")
                     feed_dict = {self.model.x: batch_x, self.model.y: batch_y, self.model.actions: batch_actions,
                                  self.model.rewards: batch_rewards,
                                  self.model.initial_lstm_state: initial_lstm_state, self.model.is_training: True}
                     last_state = self.sess.run(self.model.final_lstm_state, feed_dict)
 
                 else:
+                    print("not_new")
                     feed_dict = {self.model.x: batch_x, self.model.y: batch_y, self.model.actions: batch_actions,
                                  self.model.rewards: batch_rewards,
                                  self.model.initial_lstm_state: last_state, self.model.is_training: True}
@@ -43,13 +45,14 @@ class Trainer(BaseTrainer):
                     #     train_images = np.concatenate((out[0], batch_x[0]), axis=2)
                     #     summaries_dict = {'train_images': train_images}
                     #     self.add_image_summary(cur_it, summaries_dict=summaries_dict)
+                    print(last_state.shape)
                     losses.append(loss)
 
                 cur_iterations += 1
                 # finish the epoch
                 if cur_iterations >= self.config.nit_epoch:
                     break
-
+            print("tttttttttts")
             cur_it = self.global_step_tensor.eval(self.sess)
             loss = np.mean(losses)
 
