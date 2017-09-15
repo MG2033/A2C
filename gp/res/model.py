@@ -11,7 +11,7 @@ class RESModel:
         self.summaries = None
         self.is_training = tf.placeholder(tf.bool, name='is_training')
 
-        with tf.name_scope('input'):
+        with tf.name_scope('train_inputs'):
             self.initial_lstm_state = tf.placeholder(tf.float32, [2, None, self.config.lstm_size],
                                                      name='lstm_initial_state')
             self.x = tf.placeholder(tf.float32, [None, self.config.truncated_time_steps] + self.config.state_size,
@@ -22,13 +22,14 @@ class RESModel:
                                           name='rewards')
             self.actions = tf.placeholder(tf.float32, [None, self.config.truncated_time_steps, self.config.action_dim],
                                           name='actions')
+        with tf.name_scope('test_inputs'):
             # test_input
-            # self.x_test = tf.placeholder(tf.float32, [None] + self.config.state_size,
-            #                              name='states_test')
-            # self.initial_lstm_state_test = tf.placeholder(tf.float32, [2, None, self.config.lstm_size],
-            #                                               name='lstm_state_test')
-            # self.actions_test = tf.placeholder(tf.float32, [None, self.config.action_dim],
-            #                                    name='actions_test')
+            self.x_test = tf.placeholder(tf.float32, [None] + self.config.state_size,
+                                         name='states_test')
+            self.initial_lstm_state_test = tf.placeholder(tf.float32, [2, None, self.config.lstm_size],
+                                                          name='lstm_state_test')
+            self.actions_test = tf.placeholder(tf.float32, [None, self.config.action_dim],
+                                               name='actions_test')
             # ------------------- inferece inputs
 
     def template(self, x, action, lstm_state):
@@ -199,13 +200,9 @@ class RESModel:
                 self.reward_output = tf.transpose(self.reward_output, [1, 0, 2])
 
         # test_model
-        # lstm_state_test = tf.contrib.rnn.LSTMStateTuple(self.initial_lstm_state_test[0],
-        #                                                 self.initial_lstm_state_test[1])
-        #
-        # self.output_test, self.output_softmax_test, self.reward_out_test, self.lstm_state_test = self.network_template(
-        #     self.x_test,
-        #     self.actions_test,
-        #     lstm_state_test)
+        lstm_state_test = tf.contrib.rnn.LSTMStateTuple(self.initial_lstm_state_test[0],
+                                                        self.initial_lstm_state_test[1])
+
 
         with tf.name_scope('loss'):
             # state loss
@@ -215,12 +212,17 @@ class RESModel:
                 self.reward_loss = tf.losses.mean_squared_error(self.reward_output, self.rewards)
                 self.loss = self.states_loss + self.reward_loss
 
+        with tf.name_scope('train_step'):
         # for batchnorm layers
-        extra_update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
-        with tf.control_dependencies(extra_update_ops):
-            # RMSProp as in paper
-            self.train_step = tf.train.RMSPropOptimizer(self.config.learning_rate).minimize(self.loss)
+            extra_update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+            with tf.control_dependencies(extra_update_ops):
+                # RMSProp as in paper
+                self.train_step = tf.train.RMSPropOptimizer(self.config.learning_rate).minimize(self.loss)
 
+        self.output_test, self.output_sigmoid_test, self.reward_out_test, self.lstm_state_test = self.network_template(
+            self.x_test,
+            self.actions_test,
+            lstm_state_test)
 
 """
     def build_inference_model(self, model_built=True):

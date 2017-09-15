@@ -1,7 +1,7 @@
 class ResConfig:
     # model configs
     predict_reward = True
-    truncated_time_steps = 15
+    truncated_time_steps = 5
     state_size = [96, 96, 1]
     dropout_rate = 0.3
     lstm_size = 1024
@@ -14,7 +14,7 @@ class ResConfig:
     is_train = True
     predict_reward = True
     # training configs
-    nit_epoch = 18
+    nit_epoch = 18*.5
     n_epochs = 10000
     num_episodes_train = 40
     num_episodes_test = 10
@@ -27,7 +27,7 @@ class ResConfig:
     # summaries configs
     scalar_summary_tags = ['loss', 'test_MSE']
     # test
-    test_steps = 10
+    test_steps = 5
     # paths configs
     checkpoint_dir = './experiments/checkpoints/checkpoints'
     states_path = './data/states.npy'

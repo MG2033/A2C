@@ -33,15 +33,15 @@ class Trainer(BaseTrainer):
                     feed_dict = {self.model.x: batch_x, self.model.y: batch_y, self.model.actions: batch_actions,
                                  self.model.rewards: batch_rewards,
                                  self.model.initial_lstm_state: last_state, self.model.is_training: True}
-                    output_sigmoid, out, _, loss, last_state = self.sess.run(
-                        [self.model.output_sigmoid, self.model.output, self.model.train_step, self.model.loss,
+                    output_sigmoid, _, loss, last_state = self.sess.run(
+                        [self.model.output_sigmoid, self.model.train_step, self.model.loss,
                          self.model.final_lstm_state], feed_dict)
 
-                    if cur_iterations % 17 == 0:
-                        images = np.concatenate((batch_x[:, 5], output_sigmoid[:, 5]), axis=2)
-                        summaries_dict = {'train_images': images}
-                        self.add_image_summary(cur_it, summaries_dict=summaries_dict,
-                                               )
+                    # if cur_iterations % 17 == 0:
+                    #     images = np.concatenate((batch_x[:, 4], output_sigmoid[:, 4]), axis=2)
+                    #     summaries_dict = {'train_images': images}
+                    #     self.add_image_summary(cur_it, summaries_dict=summaries_dict,
+                    #                            )
 
                     losses.append(loss)
 
@@ -66,7 +66,7 @@ class Trainer(BaseTrainer):
                 self.save()
 
             if cur_epoch % self.config.test_every == 0:
-                # self.test(cur_it)
+                self.test(cur_it)
                 print("oooh")
         print("Training Finished")
 
@@ -76,14 +76,15 @@ class Trainer(BaseTrainer):
         out = x[:, 0]
         # test_images = np.zeros([self.config.test_steps,self.config.batch_size] + self.config.state_size)
 
-        feed_dict = {self.model.x_test: out, self.model.actions_test: a[0],
+        feed_dict = {self.model.x_test: out, self.model.actions_test: a[:,0],
                      self.model.initial_lstm_state_test: lstm_state, self.model.is_training: False}
-        lstm_state = self.sess.run(self.model.final_lstm_state, feed_dict)
+        lstm_state = self.sess.run(self.model.lstm_state_test, feed_dict)
 
         for i in range(1, self.config.test_steps):
-            feed_dict = {self.model.x_test: out, self.model.actions_test: a[i],
+            feed_dict = {self.model.x_test: out, self.model.actions_test: a[:,i],
                          self.model.initial_lstm_state_test: lstm_state, self.model.is_training: False}
-            out, lstm_state = self.sess.run([self.model.output_softmax_test, self.model.lstm_state_test], feed_dict)
-            test_images = np.concatenate((x[i], out))
+            out, lstm_state = self.sess.run([self.model.output_sigmoid_test, self.model.lstm_state_test], feed_dict)
+
+            test_images = np.concatenate((x[:,i], out),axis=2)
             summaries_dict = {'train_images_' + str(i): test_images}
             self.add_image_summary(cur_it, summaries_dict=summaries_dict)
