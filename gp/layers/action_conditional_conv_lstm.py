@@ -44,7 +44,7 @@ class BasicActionConvLSTMCell(ActionConvRNNCell):
     """
 
     def __init__(self, shape, filter_size, num_features, forget_bias=1.0, input_size=None,
-                 state_is_tuple=True, activation=tf.nn.tanh, initializer=None):
+                 state_is_tuple=True, initializer=None):
         """Initialize the basic Conv LSTM cell.
         Args:
           shape: int tuple thats the height and width of the cell
@@ -68,7 +68,6 @@ class BasicActionConvLSTMCell(ActionConvRNNCell):
         self.num_features = num_features
         self._forget_bias = forget_bias
         self._state_is_tuple = state_is_tuple
-        self._activation = activation
         self._initializer = initializer
 
     @property

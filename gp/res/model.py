@@ -1,4 +1,5 @@
 from gp.layers.action_conditional_lstm import actionlstm_cell
+from gp.layers.action_conditional_conv_lstm import BasicActionConvLSTMCell
 import tensorflow as tf
 
 
@@ -69,31 +70,16 @@ class RESModel:
             drp4 = tf.layers.dropout(tf.nn.relu(bn4), rate=self.config.dropout_rate, training=self.is_training,
                                      name='dropout')
 
-        with tf.name_scope('flatten_1'):
-            encoded = tf.contrib.layers.flatten(drp4)
+        encoded = drp4
 
-        # the size of encodded vector
-        input_size = encoded.get_shape()[1]
-
-        with tf.name_scope('lstm_layer') as scope:
-            lstm_out, lstm_new_state = actionlstm_cell(encoded, lstm_state, action, self.config.lstm_size,
-                                                       self.config.action_dim,
-                                                       initializer=tf.contrib.layers.xavier_initializer(),
-                                                       activation=tf.tanh, scope='lstm_layer')
-
-        with tf.name_scope('hidden_layer_1'):
-            h5 = tf.layers.dense(lstm_out, input_size, kernel_initializer=tf.contrib.layers.xavier_initializer())
-            bn5 = tf.layers.batch_normalization(h5, training=self.is_training)
-            drp5 = tf.layers.dropout(tf.nn.relu(bn5), rate=self.config.dropout_rate, training=self.is_training,
-                                     name='dropout')
-
-        with tf.name_scope('reshape_1'):
-            # the last encoder conv layer shape
-            deconv_init_shape = drp4.get_shape().as_list()
-            reshaped_drp4 = tf.reshape(drp5, [-1] + deconv_init_shape[1:])
+        with tf.name_scope('conv_lstm_layer') as scope:
+            lstm_shape = encoded.get_shape().as_list()
+            lstm_cell = BasicActionConvLSTMCell(lstm_shape[1:3], (3, 3), self.config.lstm_size, initializer=tf.contrib.layers.xavier_initializer())
+            actions_tensor = action * tf.ones([lstm_shape[0], lstm_shape[1], lstm_shape[2], self.config.action_dim])
+            lstm_out, lstm_new_state = lstm_cell(encoded, lstm_state, actions_tensor, scope=scope)
 
         with tf.name_scope('decoder_1'):
-            h6 = tf.layers.conv2d_transpose(reshaped_drp4, 32, kernel_size=(4, 4), strides=(2, 2), padding='SAME',
+            h6 = tf.layers.conv2d_transpose(lstm_out, 32, kernel_size=(4, 4), strides=(2, 2), padding='SAME',
                                             kernel_initializer=tf.contrib.layers.xavier_initializer())
             bn6 = tf.layers.batch_normalization(h6, training=self.is_training)
             drp6 = tf.layers.dropout(tf.nn.relu(bn6), rate=self.config.dropout_rate, training=self.is_training,
@@ -124,7 +110,7 @@ class RESModel:
             next_state_out = tf.layers.conv2d(drp9, 1, kernel_size=(3, 3), strides=(1, 1),
                                               kernel_initializer=tf.contrib.layers.xavier_initializer(), padding='SAME')
             next_state_out_sigmoid = tf.nn.sigmoid(next_state_out)
-            next_state_out_argmax = tf.floor(next_state_out_sigmoid+tf.constant(0.5))
+            next_state_out_argmax = tf.floor(next_state_out_sigmoid + tf.constant(0.5))
             # next_state_out_softmax += tf.floor(tf.constant(0.5))
         if self.config.predict_reward:
             with tf.name_scope('reward_flatten'):
@@ -141,16 +127,6 @@ class RESModel:
         else:
             reward_out = None
 
-        # print encoder_decoder layers shape for debugging
-        # print(drp1.get_shape().as_list())
-        # print(drp2.get_shape().as_list())
-        # print(drp3.get_shape().as_list())
-        # print(drp4.get_shape().as_list())
-        # print(drp6.get_shape().as_list())
-        # print(drp7.get_shape().as_list())
-        # print(drp8.get_shape().as_list())
-        # print(next_state_out.get_shape().as_list())
-
         return next_state_out, next_state_out_argmax, reward_out, lstm_new_state
 
     def build_model(self):
@@ -164,12 +140,12 @@ class RESModel:
         for i in range(self.config.truncated_time_steps):
             if i >= self.config.observation_steps_length:
                 state_out, next_state_out_argmax, reward_out, lstm_state = self.network_template(next_state_out_argmax,
-                                                                                             self.actions[:, i],
-                                                                                             lstm_state)
+                                                                                                 self.actions[:, i],
+                                                                                                 lstm_state)
             else:
                 state_out, next_state_out_argmax, reward_out, lstm_state = self.network_template(self.x[:, i, :],
-                                                                                             self.actions[:, i],
-                                                                                             lstm_state)
+                                                                                                 self.actions[:, i],
+                                                                                                 lstm_state)
 
             if self.config.predict_reward:
                 reward_unwrap.append(reward_out)
@@ -181,9 +157,6 @@ class RESModel:
                 net_unwrap.append(state_out)
                 net_sigmoid_unwrap.append(next_state_out_argmax)
 
-                # if i == 0:
-                #     self.first_step_out = (next_state_out, reward_out)
-                #     self.first_step_lstm_state = lstm_state
         self.final_lstm_state = lstm_state
         with tf.name_scope('wrap_out'):
             net_unwrap = tf.stack(net_unwrap)
@@ -192,8 +165,6 @@ class RESModel:
             net_sigmoid_unwrap = tf.stack(net_sigmoid_unwrap)
             self.output_sigmoid = tf.transpose(net_sigmoid_unwrap, [1, 0, 2, 3, 4])
 
-            # print(self.output.get_shape())
-            # print(self.y.get_shape())
             if self.config.predict_reward:
                 reward_unwrap = tf.stack(reward_unwrap)
                 self.reward_output = tf.stack(reward_unwrap)
@@ -202,7 +173,6 @@ class RESModel:
         # test_model
         lstm_state_test = tf.contrib.rnn.LSTMStateTuple(self.initial_lstm_state_test[0],
                                                         self.initial_lstm_state_test[1])
-
 
         with tf.name_scope('loss'):
             # state loss
@@ -213,7 +183,7 @@ class RESModel:
                 self.loss = self.states_loss + self.reward_loss
 
         with tf.name_scope('train_step'):
-        # for batchnorm layers
+            # for batchnorm layers
             extra_update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
             with tf.control_dependencies(extra_update_ops):
                 # RMSProp as in paper
@@ -223,6 +193,7 @@ class RESModel:
             self.x_test,
             self.actions_test,
             lstm_state_test)
+
 
 """
     def build_inference_model(self, model_built=True):
