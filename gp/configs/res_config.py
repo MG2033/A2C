@@ -24,10 +24,10 @@ class ResConfig:
     episode_length = 45
     test_every = 1
     epsilon = 0.15
-    observation_steps_length = 8
+    observation_steps_length = 3
     env_id = 'Pong'
-    # summaries configs
-    scalar_summary_tags = ['loss', 'test_MSE']
+
+
     # test
     test_steps = 5
     # paths configs

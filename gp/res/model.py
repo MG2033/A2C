@@ -23,14 +23,12 @@ class RESModel:
             self.actions = tf.placeholder(tf.float32, [None, self.config.truncated_time_steps, self.config.action_dim],
                                           name='actions')
         with tf.name_scope('test_inputs'):
-            # test_input
             self.x_test = tf.placeholder(tf.float32, [None] + self.config.state_size,
                                          name='states_test')
             self.initial_lstm_state_test = tf.placeholder(tf.float32, [2, None, self.config.lstm_size],
                                                           name='lstm_state_test')
             self.actions_test = tf.placeholder(tf.float32, [None, self.config.action_dim],
                                                name='actions_test')
-            # ------------------- inferece inputs
 
     def template(self, x, action, lstm_state):
 
@@ -73,7 +71,7 @@ class RESModel:
             encoded = tf.contrib.layers.flatten(drp4)
 
         # the size of encodded vector
-        input_size = encoded.get_shape()[1]
+        encoded_vector_size = encoded.get_shape()[1]
 
         with tf.name_scope('lstm_layer') as scope:
             lstm_out, lstm_new_state = actionlstm_cell(encoded, lstm_state, action, self.config.lstm_size,
@@ -82,7 +80,7 @@ class RESModel:
                                                        activation=tf.tanh, scope='lstm_layer')
 
         with tf.name_scope('hidden_layer_1'):
-            h5 = tf.layers.dense(lstm_out, input_size, kernel_initializer=tf.contrib.layers.xavier_initializer())
+            h5 = tf.layers.dense(lstm_out, encoded_vector_size, kernel_initializer=tf.contrib.layers.xavier_initializer())
             bn5 = tf.layers.batch_normalization(h5, training=self.is_training)
             drp5 = tf.layers.dropout(tf.nn.relu(bn5), rate=self.config.dropout_rate, training=self.is_training,
                                      name='dropout')
@@ -124,7 +122,7 @@ class RESModel:
             next_state_out = tf.layers.conv2d(drp9, 2, kernel_size=(3, 3), strides=(1, 1),
                                               kernel_initializer=tf.contrib.layers.xavier_initializer(), padding='SAME')
             next_state_out_softmax = tf.nn.softmax(next_state_out)
-            # next_state_out_softmax += tf.floor(tf.constant(0.5))
+
         if self.config.predict_reward:
             with tf.name_scope('reward_flatten'):
                 flattened_drp7 = tf.contrib.layers.flatten(drp7)
