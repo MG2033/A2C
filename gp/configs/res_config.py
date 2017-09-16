@@ -2,7 +2,7 @@ class ResConfig:
     # model configs
     predict_reward = True
     truncated_time_steps = 5
-    state_size = [96, 96, 1]
+    state_size = [96, 96, 2]
     dropout_rate = 0.3
     lstm_size = 1024
     data_size = None

@@ -88,4 +88,11 @@ class GenerateData:
                 threshold = threshold.astype('uint8') // 255
                 new_x[i, j, :, :, 0] = cv2.resize(threshold, (96, 96))
         new_x[:,:,:15,:,:]=0
+
+        #creating 2 channels
+        new_x = (np.arange(2) == new_x).astype(int)
+
         return new_x
+
+
+

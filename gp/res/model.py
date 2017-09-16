@@ -121,10 +121,9 @@ class RESModel:
                                      name='dropout')
 
         with tf.name_scope('decoder_5'):
-            next_state_out = tf.layers.conv2d(drp9, 1, kernel_size=(3, 3), strides=(1, 1),
+            next_state_out = tf.layers.conv2d(drp9, 2, kernel_size=(3, 3), strides=(1, 1),
                                               kernel_initializer=tf.contrib.layers.xavier_initializer(), padding='SAME')
-            next_state_out_sigmoid = tf.nn.sigmoid(next_state_out)
-            next_state_out_argmax = tf.floor(next_state_out_sigmoid+tf.constant(0.5))
+            next_state_out_softmax = tf.nn.softmax(next_state_out)
             # next_state_out_softmax += tf.floor(tf.constant(0.5))
         if self.config.predict_reward:
             with tf.name_scope('reward_flatten'):
@@ -151,11 +150,11 @@ class RESModel:
         # print(drp8.get_shape().as_list())
         # print(next_state_out.get_shape().as_list())
 
-        return next_state_out, next_state_out_argmax, reward_out, lstm_new_state
+        return next_state_out, next_state_out_softmax, reward_out, lstm_new_state
 
     def build_model(self):
         net_unwrap = []
-        net_sigmoid_unwrap = []
+        net_softmax_unwrap = []
 
         reward_unwrap = []
         self.network_template = tf.make_template('network', self.template)
@@ -163,23 +162,24 @@ class RESModel:
         lstm_state = tf.contrib.rnn.LSTMStateTuple(self.initial_lstm_state[0], self.initial_lstm_state[1])
         for i in range(self.config.truncated_time_steps):
             if i >= self.config.observation_steps_length:
-                state_out, next_state_out_argmax, reward_out, lstm_state = self.network_template(next_state_out_argmax,
-                                                                                             self.actions[:, i],
-                                                                                             lstm_state)
+                state_out, next_state_out_softmax, reward_out, lstm_state = self.network_template(
+                    next_state_out_softmax,
+                    self.actions[:, i],
+                    lstm_state)
             else:
-                state_out, next_state_out_argmax, reward_out, lstm_state = self.network_template(self.x[:, i, :],
-                                                                                             self.actions[:, i],
-                                                                                             lstm_state)
+                state_out, next_state_out_softmax, reward_out, lstm_state = self.network_template(self.x[:, i, :],
+                                                                                                  self.actions[:, i],
+                                                                                                  lstm_state)
 
             if self.config.predict_reward:
                 reward_unwrap.append(reward_out)
                 # the resize is just temp sol until calculate conv_deconv stuff
                 # net_unwrap.append(tf.image.resize_images(next_state_out, (256, 160)))
                 net_unwrap.append(state_out)
-                net_sigmoid_unwrap.append(next_state_out_argmax)
+                net_softmax_unwrap.append(next_state_out_softmax)
             else:
                 net_unwrap.append(state_out)
-                net_sigmoid_unwrap.append(next_state_out_argmax)
+                net_softmax_unwrap.append(next_state_out_softmax)
 
                 # if i == 0:
                 #     self.first_step_out = (next_state_out, reward_out)
@@ -189,86 +189,34 @@ class RESModel:
             net_unwrap = tf.stack(net_unwrap)
             self.output = tf.transpose(net_unwrap, [1, 0, 2, 3, 4])
 
-            net_sigmoid_unwrap = tf.stack(net_sigmoid_unwrap)
-            self.output_sigmoid = tf.transpose(net_sigmoid_unwrap, [1, 0, 2, 3, 4])
+            net_softmax_unwrap = tf.stack(net_softmax_unwrap)
+            self.output_softmax = tf.transpose(net_softmax_unwrap, [1, 0, 2, 3, 4])
 
-            # print(self.output.get_shape())
-            # print(self.y.get_shape())
             if self.config.predict_reward:
                 reward_unwrap = tf.stack(reward_unwrap)
                 self.reward_output = tf.stack(reward_unwrap)
                 self.reward_output = tf.transpose(self.reward_output, [1, 0, 2])
 
-        # test_model
-        lstm_state_test = tf.contrib.rnn.LSTMStateTuple(self.initial_lstm_state_test[0],
-                                                        self.initial_lstm_state_test[1])
-
-
         with tf.name_scope('loss'):
             # state loss
-            self.states_loss = tf.nn.sigmoid_cross_entropy_with_logits(logits=self.output, labels=self.y)
+            self.states_loss = tf.nn.softmax_cross_entropy_with_logits(logits=self.output, labels=self.y)
+            self.loss = self.states_loss
             # adding reward loss
             if self.config.predict_reward:
                 self.reward_loss = tf.losses.mean_squared_error(self.reward_output, self.rewards)
-                self.loss = self.states_loss + self.reward_loss
+                self.loss += self.reward_loss
 
         with tf.name_scope('train_step'):
-        # for batchnorm layers
+            # for batchnorm layers
             extra_update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
             with tf.control_dependencies(extra_update_ops):
                 # RMSProp as in paper
                 self.train_step = tf.train.RMSPropOptimizer(self.config.learning_rate).minimize(self.loss)
 
-        self.output_test, self.output_sigmoid_test, self.reward_out_test, self.lstm_state_test = self.network_template(
+        # test_model
+        lstm_state_test = tf.contrib.rnn.LSTMStateTuple(self.initial_lstm_state_test[0],
+                                                        self.initial_lstm_state_test[1])
+        self.output_test, self.output_softmax_test, self.reward_out_test, self.lstm_state_test = self.network_template(
             self.x_test,
             self.actions_test,
             lstm_state_test)
-
-"""
-    def build_inference_model(self, model_built=True):
-        net_unwrap = []
-        reward_unwrap = []
-        if model_built
-            self.network_template = tf.make_template('network', self.template)
-
-        lstm_state = tf.contrib.rnn.LSTMStateTuple(self.initial_lstm_state[0], self.initial_lstm_state[1])
-        for i in range(self.config.truncated_time_steps):
-            next_state_out, reward_out, lstm_state = self.network_template(self.x[:, i, :], self.actions[:, i],
-                                                                           lstm_state)
-
-            if self.config.predict_reward:
-                reward_unwrap.append(reward_out)
-                # the resize is just temp sol until calculate conv_deconv stuff
-                # net_unwrap.append(tf.image.resize_images(next_state_out, (256, 160)))
-                net_unwrap.append(next_state_out)
-            else:
-                net_unwrap.append(next_state_out)
-
-                # if i == 0:
-                #     self.first_step_out = (next_state_out, reward_out)
-                #     self.first_step_lstm_state = lstm_state
-
-        self.final_lstm_state = lstm_state
-
-        with tf.name_scope('wrap_out'):
-            net_unwrap = tf.stack(net_unwrap)
-            self.output = tf.transpose(net_unwrap, [1, 0, 2, 3, 4])
-
-            if self.config.predict_reward:
-                reward_unwrap = tf.stack(reward_unwrap)
-                self.reward_output = tf.stack(reward_unwrap)
-
-        with tf.name_scope('loss'):
-            # state loss
-            self.states_loss = tf.losses.mean_squared_error(self.y, self.output)
-            # adding reward loss
-            if self.config.predict_reward:
-                self.reward_loss = tf.losses.mean_squared_error(self.reward_output, self.rewards)
-                self.loss = self.states_loss + self.reward_loss
-
-        # for batchnorm layers
-        extra_update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
-        with tf.control_dependencies(extra_update_ops):
-            # RMSProp as in paper
-            self.train_step = tf.train.RMSPropOptimizer(self.config.learning_rate).minimize(self.loss)
-"""
