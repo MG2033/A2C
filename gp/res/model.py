@@ -16,7 +16,7 @@ class RESModel:
                                                      name='lstm_initial_state')
             self.x = tf.placeholder(tf.float32, [None, self.config.truncated_time_steps] + self.config.state_size,
                                     name='states')
-            self.y = tf.placeholder(tf.float32, [None, self.config.truncated_time_steps] + self.config.state_size,
+            self.y = tf.placeholder(tf.int32, [None, self.config.truncated_time_steps] + self.config.labels_size,
                                     name='next_states')
             self.rewards = tf.placeholder(tf.float32, [None, self.config.truncated_time_steps, 1],
                                           name='rewards')
@@ -199,7 +199,7 @@ class RESModel:
 
         with tf.name_scope('loss'):
             # state loss
-            self.states_loss = tf.nn.softmax_cross_entropy_with_logits(logits=self.output, labels=self.y)
+            self.states_loss = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=self.output, labels=self.y)
             self.loss = self.states_loss
             # adding reward loss
             if self.config.predict_reward:

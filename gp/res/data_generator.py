@@ -20,7 +20,7 @@ class GenerateData:
         self.x = x[:, :-1]
 
         self.x = self.prepare_states(self.x)
-        self.y = self.prepare_states(self.y)
+        self.y = self.prepare_labels(self.y)
 
         # shuffles
         self.x = self.x[idx]
@@ -91,6 +91,21 @@ class GenerateData:
 
         #creating 2 channels
         new_x = (np.arange(2) == new_x).astype(int)
+
+        return new_x
+
+
+    def prepare_labels(self, x, env_id='Pong'):
+        new_x = np.zeros((x.shape[0], x.shape[1], 96, 96, 1))
+
+        for i in range(x.shape[0]):
+            for j in range(x.shape[1]):
+                retval2, threshold = cv2.threshold(x[i, j, :, :, 0].astype('uint8'), 89, 255, cv2.THRESH_BINARY)
+                threshold = threshold.astype('uint8') // 255
+                new_x[i, j, :, :, 0] = cv2.resize(threshold, (96, 96))
+        new_x[:,:,:15,:,:]=0
+
+        new_x=np.squeeze(new_x,-1)
 
         return new_x
 
