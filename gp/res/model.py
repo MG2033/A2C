@@ -171,17 +171,13 @@ class RESModel:
 
             if self.config.predict_reward:
                 reward_unwrap.append(reward_out)
-                # the resize is just temp sol until calculate conv_deconv stuff
-                # net_unwrap.append(tf.image.resize_images(next_state_out, (256, 160)))
                 net_unwrap.append(state_out)
                 net_softmax_unwrap.append(next_state_out_softmax)
             else:
                 net_unwrap.append(state_out)
                 net_softmax_unwrap.append(next_state_out_softmax)
 
-                # if i == 0:
-                #     self.first_step_out = (next_state_out, reward_out)
-                #     self.first_step_lstm_state = lstm_state
+
         self.final_lstm_state = lstm_state
         with tf.name_scope('wrap_out'):
             net_unwrap = tf.stack(net_unwrap)
@@ -197,7 +193,7 @@ class RESModel:
 
         with tf.name_scope('loss'):
             # state loss
-            self.states_loss = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=self.output, labels=self.y)
+            self.states_loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(logits=self.output, labels=self.y))
             self.loss = self.states_loss
             # adding reward loss
             if self.config.predict_reward:
