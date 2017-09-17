@@ -1,7 +1,7 @@
 class ResConfig:
     # model configs
     predict_reward = True
-    truncated_time_steps = 5
+    truncated_time_steps = 15
     state_size = [96, 96, 2]
     labels_size = [96, 96]
 
@@ -16,7 +16,7 @@ class ResConfig:
     is_train = True
     predict_reward = True
     # training configs
-    nit_epoch = 18*.5
+    nit_epoch = 18*3
     n_epochs = 10000
     num_episodes_train = 40
     num_episodes_test = 10
