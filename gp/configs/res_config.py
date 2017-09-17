@@ -24,7 +24,7 @@ class ResConfig:
     episode_length = 45
     test_every = 1
     epsilon = 0.15
-    observation_steps_length = 3
+    observation_steps_length = 8
     env_id = 'Pong'
 
 
