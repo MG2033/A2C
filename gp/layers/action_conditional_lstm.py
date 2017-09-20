@@ -2,15 +2,15 @@ import tensorflow as tf
 
 
 class ActionLSTMCell(tf.nn.rnn_cell.BasicLSTMCell):
-    def __init__(self, num_units, w_hv, w_hz, w_vh, w_va,
+    def __init__(self, num_units, w_all_v, w_all_z, wh, wa,
                  activation=None, reuse=None, scope=None):
         """
 
         :param num_units: lstm num units
-        :param w_hv:
-        :param w_hz:
-        :param w_vh:
-        :param w_va:
+        :param w_all_v:
+        :param w_all_z:
+        :param wh:
+        :param wa:
         :param activation: activation function
         :param reuse: whether to reuse variables or not
         :param scope: scope name
@@ -21,20 +21,20 @@ class ActionLSTMCell(tf.nn.rnn_cell.BasicLSTMCell):
         self._activation = activation
 
         # variables of action conditional lstm equations
-        self._w_hv = w_hv
-        self._w_hz = w_hz
-        self._w_vh = w_vh
-        self._w_va = w_va
+        self._w_all_v = w_all_v
+        self._w_all_z = w_all_z
+        self._wh = wh
+        self._wa = wa
 
     def __call__(self, x, h, a, scope=None):
         with tf.variable_scope(self._scope or self.__class__.__name__):
             previous_memory, previous_output = h
 
-            v = tf.matmul(self._w_vh, tf.transpose(previous_output, (1, 0))) * tf.matmul(self._w_va,
-                                                                                         tf.transpose(a, (1, 0)))
-            w_v = tf.matmul(self._w_hv, v)
+            v = tf.matmul(self._wh, tf.transpose(previous_output, (1, 0))) * tf.matmul(self._wa,
+                                                                                       tf.transpose(a, (1, 0)))
+            w_v = tf.matmul(self._w_all_v, v)
             iv, fv, ov, cv = tf.split(w_v, 4, axis=0)
-            w_z = tf.matmul(self._w_hz, tf.transpose(x))
+            w_z = tf.matmul(self._w_all_z, tf.transpose(x))
             iz, fz, oz, cz = tf.split(w_z, 4, axis=0)
 
             i = tf.sigmoid(iv + iz)
@@ -65,13 +65,13 @@ def actionlstm_cell(x, h, a, num_units, action_dim,
         # Initialize the weights
         state_size = x.get_shape()[1]
 
-        w_hv = tf.get_variable('w_hv', [4 * num_units, 2 * num_units], initializer=initializer)
-        w_hz = tf.get_variable('w_hz', [4 * num_units, state_size], initializer=initializer)
-        w_vh = tf.get_variable('w_vh', [2 * num_units, num_units], initializer=initializer)
-        w_va = tf.get_variable('w_va', [2 * num_units, action_dim], initializer=initializer)
+        w_all_v = tf.get_variable('w_all_v', [4 * num_units, 2 * num_units], initializer=initializer)
+        w_all_z = tf.get_variable('w_all_z', [4 * num_units, state_size], initializer=initializer)
+        wh = tf.get_variable('wh', [2 * num_units, num_units], initializer=initializer)
+        wa = tf.get_variable('wa', [2 * num_units, action_dim], initializer=initializer)
 
     # init the cell
-    cell = ActionLSTMCell(num_units, w_hv, w_hz, w_vh, w_va, activation)
+    cell = ActionLSTMCell(num_units, w_all_v, w_all_z, wh, wa, activation)
     # call the cell
     if h is None:
         h = cell.zero_state(tf.shape(x)[0], tf.float32)
