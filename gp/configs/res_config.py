@@ -1,7 +1,7 @@
 class ResConfig:
     # model configs
     predict_reward = True
-    truncated_time_steps = 15
+    truncated_time_steps = 5
     state_size = [96, 96, 2]
     labels_size = [96, 96]
 
