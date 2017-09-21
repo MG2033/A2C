@@ -26,7 +26,7 @@ class ResConfig:
     epsilon = 0.15
     observation_steps_length = 8
     env_id = 'Pong'
-
+    train_ratio=.9
 
     # test
     test_steps = 5
