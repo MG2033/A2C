@@ -65,10 +65,12 @@ class GenerateData:
                 yield batch_x, batch_y, batch_actions, batch_rewards, new_sequence
 
     def sample(self, type='train'):
-        idx = np.random.choice(self.config.num_episodes_train, self.config.batch_size)
         if type == 'train':
+            idx = np.random.choice(self.x_train.shape[0], self.config.batch_size)
             return self.x_train[idx], self.actions_train[idx]
+
         elif type == 'test':
+            idx = np.random.choice(self.x_test.shape[0], self.config.batch_size)
             return self.x_test[idx], self.actions_test[idx]
 
     def prepare_actions(self, idx):
