@@ -2,7 +2,9 @@ class ResConfig:
     # model configs
     predict_reward = True
     truncated_time_steps = 5
-    state_size = [96, 96, 1]
+    state_size = [96, 96, 2]
+    labels_size = [96, 96]
+
     dropout_rate = 0.3
     lstm_size = 1024
     data_size = None
@@ -14,7 +16,7 @@ class ResConfig:
     is_train = True
     predict_reward = True
     # training configs
-    nit_epoch = 18*.5
+    nit_epoch = 18*3
     n_epochs = 10000
     num_episodes_train = 40
     num_episodes_test = 10
@@ -24,8 +26,8 @@ class ResConfig:
     epsilon = 0.15
     observation_steps_length = 8
     env_id = 'Pong'
-    # summaries configs
-    scalar_summary_tags = ['loss', 'test_MSE']
+
+
     # test
     test_steps = 5
     # paths configs

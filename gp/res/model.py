@@ -17,21 +17,19 @@ class RESModel:
                                                      name='lstm_initial_state')
             self.x = tf.placeholder(tf.float32, [None, self.config.truncated_time_steps] + self.config.state_size,
                                     name='states')
-            self.y = tf.placeholder(tf.float32, [None, self.config.truncated_time_steps] + self.config.state_size,
+            self.y = tf.placeholder(tf.int32, [None, self.config.truncated_time_steps] + self.config.labels_size,
                                     name='next_states')
             self.rewards = tf.placeholder(tf.float32, [None, self.config.truncated_time_steps, 1],
                                           name='rewards')
             self.actions = tf.placeholder(tf.float32, [None, self.config.truncated_time_steps, self.config.action_dim],
                                           name='actions')
         with tf.name_scope('test_inputs'):
-            # test_input
             self.x_test = tf.placeholder(tf.float32, [None] + self.config.state_size,
                                          name='states_test')
             self.initial_lstm_state_test = tf.placeholder(tf.float32, [2, None, self.config.lstm_size],
                                                           name='lstm_state_test')
             self.actions_test = tf.placeholder(tf.float32, [None, self.config.action_dim],
                                                name='actions_test')
-            # ------------------- inferece inputs
 
     def template(self, x, action, lstm_state):
 
@@ -72,11 +70,33 @@ class RESModel:
 
         encoded = drp4
 
+# <<<<<<< master
+#         # the size of encodded vector
+#         encoded_vector_size = encoded.get_shape()[1]
+
+#         with tf.name_scope('lstm_layer') as scope:
+#             lstm_out, lstm_new_state = actionlstm_cell(encoded, lstm_state, action, self.config.lstm_size,
+#                                                        self.config.action_dim,
+#                                                        initializer=tf.contrib.layers.xavier_initializer(),
+#                                                        activation=tf.tanh, scope='lstm_layer')
+
+#         with tf.name_scope('hidden_layer_1'):
+#             h5 = tf.layers.dense(lstm_out, encoded_vector_size, kernel_initializer=tf.contrib.layers.xavier_initializer())
+#             bn5 = tf.layers.batch_normalization(h5, training=self.is_training)
+#             drp5 = tf.layers.dropout(tf.nn.relu(bn5), rate=self.config.dropout_rate, training=self.is_training,
+#                                      name='dropout')
+
+#         with tf.name_scope('reshape_1'):
+#             # the last encoder conv layer shape
+#             deconv_init_shape = drp4.get_shape().as_list()
+#             reshaped_drp4 = tf.reshape(drp5, [-1] + deconv_init_shape[1:])
+# =======
         with tf.name_scope('conv_lstm_layer') as scope:
             lstm_shape = encoded.get_shape().as_list()
             lstm_cell = BasicActionConvLSTMCell(lstm_shape[1:3], (3, 3), self.config.lstm_size, initializer=tf.contrib.layers.xavier_initializer())
             actions_tensor = action * tf.ones([lstm_shape[0], lstm_shape[1], lstm_shape[2], self.config.action_dim])
             lstm_out, lstm_new_state = lstm_cell(encoded, lstm_state, actions_tensor, scope=scope)
+# >>>>>>> res_conv_lstm
 
         with tf.name_scope('decoder_1'):
             h6 = tf.layers.conv2d_transpose(lstm_out, 32, kernel_size=(4, 4), strides=(2, 2), padding='SAME',
@@ -107,11 +127,16 @@ class RESModel:
                                      name='dropout')
 
         with tf.name_scope('decoder_5'):
-            next_state_out = tf.layers.conv2d(drp9, 1, kernel_size=(3, 3), strides=(1, 1),
+            next_state_out = tf.layers.conv2d(drp9, 2, kernel_size=(3, 3), strides=(1, 1),
                                               kernel_initializer=tf.contrib.layers.xavier_initializer(), padding='SAME')
-            next_state_out_sigmoid = tf.nn.sigmoid(next_state_out)
-            next_state_out_argmax = tf.floor(next_state_out_sigmoid + tf.constant(0.5))
+# <<<<<<< master
+            next_state_out_softmax = tf.nn.softmax(next_state_out)
+
+# =======
+#             next_state_out_sigmoid = tf.nn.sigmoid(next_state_out)
+#             next_state_out_argmax = tf.floor(next_state_out_sigmoid + tf.constant(0.5))
             # next_state_out_softmax += tf.floor(tf.constant(0.5))
+# >>>>>>> res_conv_lstm
         if self.config.predict_reward:
             with tf.name_scope('reward_flatten'):
                 flattened_drp7 = tf.contrib.layers.flatten(drp7)
@@ -127,11 +152,25 @@ class RESModel:
         else:
             reward_out = None
 
+# <<<<<<< master
+        # print encoder_decoder layers shape for debugging
+        # print(drp1.get_shape().as_list())
+        # print(drp2.get_shape().as_list())
+        # print(drp3.get_shape().as_list())
+        # print(drp4.get_shape().as_list())
+        # print(drp6.get_shape().as_list())
+        # print(drp7.get_shape().as_list())
+        # print(drp8.get_shape().as_list())
+        # print(next_state_out.get_shape().as_list())
+
+#         return next_state_out, next_state_out_softmax, reward_out, lstm_new_state
+# =======
         return next_state_out, next_state_out_argmax, reward_out, lstm_new_state
+# >>>>>>> res_conv_lstm
 
     def build_model(self):
         net_unwrap = []
-        net_sigmoid_unwrap = []
+        net_softmax_unwrap = []
 
         reward_unwrap = []
         self.network_template = tf.make_template('network', self.template)
@@ -139,48 +178,62 @@ class RESModel:
         lstm_state = tf.contrib.rnn.LSTMStateTuple(self.initial_lstm_state[0], self.initial_lstm_state[1])
         for i in range(self.config.truncated_time_steps):
             if i >= self.config.observation_steps_length:
-                state_out, next_state_out_argmax, reward_out, lstm_state = self.network_template(next_state_out_argmax,
-                                                                                                 self.actions[:, i],
-                                                                                                 lstm_state)
+# <<<<<<< master
+                state_out, next_state_out_softmax, reward_out, lstm_state = self.network_template(
+                    next_state_out_softmax,
+                    self.actions[:, i],
+                    lstm_state)
             else:
-                state_out, next_state_out_argmax, reward_out, lstm_state = self.network_template(self.x[:, i, :],
-                                                                                                 self.actions[:, i],
-                                                                                                 lstm_state)
+                state_out, next_state_out_softmax, reward_out, lstm_state = self.network_template(self.x[:, i, :],
+                                                                                                  self.actions[:, i],
+                                                                                                  lstm_state)
+# =======
+#                 state_out, next_state_out_argmax, reward_out, lstm_state = self.network_template(next_state_out_argmax,
+#                                                                                                  self.actions[:, i],
+#                                                                                                  lstm_state)
+#             else:
+#                 state_out, next_state_out_argmax, reward_out, lstm_state = self.network_template(self.x[:, i, :],
+#                                                                                                  self.actions[:, i],
+#                                                                                                  lstm_state)
+# >>>>>>> res_conv_lstm
 
             if self.config.predict_reward:
                 reward_unwrap.append(reward_out)
-                # the resize is just temp sol until calculate conv_deconv stuff
-                # net_unwrap.append(tf.image.resize_images(next_state_out, (256, 160)))
                 net_unwrap.append(state_out)
-                net_sigmoid_unwrap.append(next_state_out_argmax)
+                net_softmax_unwrap.append(next_state_out_softmax)
             else:
                 net_unwrap.append(state_out)
-                net_sigmoid_unwrap.append(next_state_out_argmax)
+                net_softmax_unwrap.append(next_state_out_softmax)
+
 
         self.final_lstm_state = lstm_state
         with tf.name_scope('wrap_out'):
             net_unwrap = tf.stack(net_unwrap)
             self.output = tf.transpose(net_unwrap, [1, 0, 2, 3, 4])
 
-            net_sigmoid_unwrap = tf.stack(net_sigmoid_unwrap)
-            self.output_sigmoid = tf.transpose(net_sigmoid_unwrap, [1, 0, 2, 3, 4])
+            net_softmax_unwrap = tf.stack(net_softmax_unwrap)
+            self.output_softmax = tf.transpose(net_softmax_unwrap, [1, 0, 2, 3, 4])
 
             if self.config.predict_reward:
                 reward_unwrap = tf.stack(reward_unwrap)
                 self.reward_output = tf.stack(reward_unwrap)
                 self.reward_output = tf.transpose(self.reward_output, [1, 0, 2])
 
+# <<<<<<< master
+# =======
         # test_model
         lstm_state_test = tf.contrib.rnn.LSTMStateTuple(self.initial_lstm_state_test[0],
                                                         self.initial_lstm_state_test[1])
 
+# >>>>>>> res_conv_lstm
         with tf.name_scope('loss'):
             # state loss
-            self.states_loss = tf.nn.sigmoid_cross_entropy_with_logits(logits=self.output, labels=self.y)
+            self.states_loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(logits=self.output, labels=self.y))
+            self.loss = self.states_loss
             # adding reward loss
             if self.config.predict_reward:
                 self.reward_loss = tf.losses.mean_squared_error(self.reward_output, self.rewards)
-                self.loss = self.states_loss + self.reward_loss
+                self.loss += self.reward_loss
 
         with tf.name_scope('train_step'):
             # for batchnorm layers
@@ -189,10 +242,15 @@ class RESModel:
                 # RMSProp as in paper
                 self.train_step = tf.train.RMSPropOptimizer(self.config.learning_rate).minimize(self.loss)
 
-        self.output_test, self.output_sigmoid_test, self.reward_out_test, self.lstm_state_test = self.network_template(
+        # test_model
+        lstm_state_test = tf.contrib.rnn.LSTMStateTuple(self.initial_lstm_state_test[0],
+                                                        self.initial_lstm_state_test[1])
+        self.output_test, self.output_softmax_test, self.reward_out_test, self.lstm_state_test = self.network_template(
             self.x_test,
             self.actions_test,
             lstm_state_test)
+# <<<<<<< master
+# =======
 
 
 """
@@ -243,3 +301,4 @@ class RESModel:
             # RMSProp as in paper
             self.train_step = tf.train.RMSPropOptimizer(self.config.learning_rate).minimize(self.loss)
 """
+# >>>>>>> res_conv_lstm
