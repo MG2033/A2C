@@ -35,6 +35,7 @@ class ActionLSTMCell(tf.nn.rnn_cell.BasicLSTMCell):
             w_z = tf.matmul(x, self._w_all_z)
             iz, fz, oz, cz = tf.split(w_z, 4, axis=1)
 
+
             i = tf.sigmoid(iv + iz)
             f = tf.sigmoid(fv + fz)
             o = tf.sigmoid(ov + oz)
@@ -66,6 +67,7 @@ def actionlstm_cell(x, h, a, num_units, action_dim,
         w_all_z = tf.get_variable('w_all_z', [state_size, 4 * num_units], initializer=initializer)
         wh = tf.get_variable('wh', [num_units, 2 * num_units], initializer=initializer)
         wa = tf.get_variable('wa', [action_dim, 2 * num_units], initializer=initializer)
+
 
     # init the cell
     cell = ActionLSTMCell(num_units, w_all_v, w_all_z, wh, wa, activation)
