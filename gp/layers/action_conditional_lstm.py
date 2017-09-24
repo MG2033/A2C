@@ -5,7 +5,6 @@ class ActionLSTMCell(tf.nn.rnn_cell.BasicLSTMCell):
     def __init__(self, num_units, w_all_v, w_all_z, wh, wa,
                  activation=None, reuse=None, scope=None):
         """
-
         :param num_units: lstm num units
         :param w_all_v:
         :param w_all_z:
@@ -30,21 +29,20 @@ class ActionLSTMCell(tf.nn.rnn_cell.BasicLSTMCell):
         with tf.variable_scope(self._scope or self.__class__.__name__):
             previous_memory, previous_output = h
 
-            v = tf.matmul(self._wh, tf.transpose(previous_output, (1, 0))) * tf.matmul(self._wa,
-                                                                                       tf.transpose(a, (1, 0)))
-            w_v = tf.matmul(self._w_all_v, v)
-            iv, fv, ov, cv = tf.split(w_v, 4, axis=0)
-            w_z = tf.matmul(self._w_all_z, tf.transpose(x))
-            iz, fz, oz, cz = tf.split(w_z, 4, axis=0)
+            v = tf.matmul(previous_output, self._wh) * tf.matmul(a, self._wa)
+            w_v = tf.matmul(v, self._w_all_v)
+            iv, fv, ov, cv = tf.split(w_v, 4, axis=1)
+            w_z = tf.matmul(x, self._w_all_z)
+            iz, fz, oz, cz = tf.split(w_z, 4, axis=1)
+
 
             i = tf.sigmoid(iv + iz)
             f = tf.sigmoid(fv + fz)
             o = tf.sigmoid(ov + oz)
-            memory = f * tf.transpose(previous_memory, (1, 0)) + i * tf.tanh(cv + cz)
+            memory = f * previous_memory + i * tf.tanh(cv + cz)
             output = o * tf.tanh(memory)
 
-        return tf.transpose(output, (1, 0)), tf.contrib.rnn.LSTMStateTuple(tf.transpose(memory, (1, 0)),
-                                                                           tf.transpose(output, (1, 0)))
+        return output, tf.contrib.rnn.LSTMStateTuple(memory, output)
 
 
 def actionlstm_cell(x, h, a, num_units, action_dim,
@@ -65,10 +63,11 @@ def actionlstm_cell(x, h, a, num_units, action_dim,
         # Initialize the weights
         state_size = x.get_shape()[1]
 
-        w_all_v = tf.get_variable('w_all_v', [4 * num_units, 2 * num_units], initializer=initializer)
-        w_all_z = tf.get_variable('w_all_z', [4 * num_units, state_size], initializer=initializer)
-        wh = tf.get_variable('wh', [2 * num_units, num_units], initializer=initializer)
-        wa = tf.get_variable('wa', [2 * num_units, action_dim], initializer=initializer)
+        w_all_v = tf.get_variable('w_all_v', [2 * num_units, 4 * num_units], initializer=initializer)
+        w_all_z = tf.get_variable('w_all_z', [state_size, 4 * num_units], initializer=initializer)
+        wh = tf.get_variable('wh', [num_units, 2 * num_units], initializer=initializer)
+        wa = tf.get_variable('wa', [action_dim, 2 * num_units], initializer=initializer)
+
 
     # init the cell
     cell = ActionLSTMCell(num_units, w_all_v, w_all_z, wh, wa, activation)

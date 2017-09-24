@@ -16,20 +16,18 @@ class ResConfig:
     is_train = True
     predict_reward = True
     # training configs
-    nit_epoch = 18*3
+    nit_epoch = 2*3
     n_epochs = 10000
-    num_episodes_train = 40
-    num_episodes_test = 10
     num_episodes = 50
     episode_length = 45
     test_every = 1
     epsilon = 0.15
     observation_steps_length = 8
     env_id = 'Pong'
-
+    train_ratio=.9
 
     # test
-    test_steps = 5
+    test_steps = 10
     # paths configs
     checkpoint_dir = './experiments/checkpoints/checkpoints'
     states_path = './data/states.npy'
