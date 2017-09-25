@@ -38,29 +38,31 @@ class A2C:
             self.train = self.__train
 
         else:
+            observation_space_shape, action_space_n = None
             try:
                 with open(A2CConfig.experiment_dir + 'env_data.pkl', 'rb') as f:
                     observation_space_shape, action_space_n = pickle.load(f)
-                self.model = Model(sess, observation_space_shape, action_space_n,
-                                   optimizer_params={
-                                       'learning_rate': A2CConfig.learning_rate, 'alpha': 0.99, 'epsilon': 1e-5})
-
-                print("\n\nBuilding the model...")
-                self.model.build()
-                print("Model is built successfully\n\n")
-
-                latest_checkpoint = tf.train.latest_checkpoint(A2CConfig.checkpoint_dir)
-                self.saver = tf.train.Saver(max_to_keep=A2CConfig.max_to_keep)
-                if latest_checkpoint:
-                    print("Loading model checkpoint {} ...\n".format(latest_checkpoint))
-                    self.saver.restore(sess, latest_checkpoint)
-                    print("Model loaded")
-
-                self.test = self.__test
-                self.infer = self.__infer
             except:
-                print("Environment or checkpoint data not found. Make sure that env_data.pkl is present in the experiment")
+                print(
+                    "Environment or checkpoint data not found. Make sure that env_data.pkl is present in the experiment")
                 exit(1)
+            self.model = Model(sess, observation_space_shape, action_space_n,
+                               optimizer_params={
+                                   'learning_rate': A2CConfig.learning_rate, 'alpha': 0.99, 'epsilon': 1e-5})
+
+            print("\n\nBuilding the model...")
+            self.model.build()
+            print("Model is built successfully\n\n")
+
+            latest_checkpoint = tf.train.latest_checkpoint(A2CConfig.checkpoint_dir)
+            self.saver = tf.train.Saver(max_to_keep=A2CConfig.max_to_keep)
+            if latest_checkpoint:
+                print("Loading model checkpoint {} ...\n".format(latest_checkpoint))
+                self.saver.restore(sess, latest_checkpoint)
+                print("Model loaded")
+
+            self.test = self.__test
+            self.infer = self.__infer
 
     def __train(self):
         print('Training...')
