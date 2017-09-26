@@ -8,7 +8,7 @@ from gp.utils.utils import create_dirs
 
 FLAGS = tf.app.flags.FLAGS
 tf.app.flags.DEFINE_string('save_dir', "./data/", """ directory to save to """)
-tf.app.flags.DEFINE_integer('episodes', 500, """ number of episodes """)
+tf.app.flags.DEFINE_integer('episodes', 5000, """ number of episodes """)
 tf.app.flags.DEFINE_integer('episode_len', 45, """ number of episode steps """)
 tf.app.flags.DEFINE_integer('max_episode_len', 5001, """ number of episode steps """)
 import matplotlib.pyplot as plt
@@ -66,7 +66,7 @@ class Collector:
                 ob = self.observation_update(new_ob, ob)
                 if done or step == FLAGS.max_episode_len - 1:
                     print(step)
-                    epsilon *= 0.99
+                    epsilon *= 0.9
                     for i in range(int(step / FLAGS.episode_len)):
                         self.states[epsd] = states[step - (i + 1) * FLAGS.episode_len:step - i * FLAGS.episode_len + 1]
                         self.actions[epsd] = actions[step - (i + 1) * FLAGS.episode_len:step - i * FLAGS.episode_len]
