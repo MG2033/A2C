@@ -52,7 +52,7 @@ class Collector:
                     action = self.action_space[policy_action]
 
                 # print(action)
-                self.env.render()
+                # self.env.render()
 
                 new_ob, reward, done, _ = self.env.step([action])
                 states[step] = new_ob[0]
