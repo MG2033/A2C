@@ -78,7 +78,8 @@ class Collector:
                         self.epsd_cnt[0] = epsd
                     ob = self.env.reset()
                     ob = np.concatenate((ob, ob, ob, ob), axis=-1)
-                    self.save()
+                    if np.random.choice(2, 1, p=[0.1, 0.9]) == 0:
+                        self.save()
 
                     break
 
