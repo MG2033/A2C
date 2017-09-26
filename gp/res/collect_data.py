@@ -87,7 +87,7 @@ class Collector:
 
 def main(_):
     env_id = 'PongNoFrameskip-v4'
-    a2c = A2C(inference=True)
+    a2c = A2C(inference=False)
     data_collector = Collector(env_id, a2c.make_all_environments, a2c.infer)
 
     data_collector.collect_data()
