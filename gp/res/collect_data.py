@@ -37,6 +37,7 @@ class Collector:
         ob = self.env.reset()
         ob = np.concatenate((ob, ob, ob, ob), axis=-1)
         epsd = 0
+        epsilon = 0.9
         while epsd < FLAGS.episodes:
             states = np.zeros((FLAGS.max_episode_len + 1,) + self.state_size)
             rewards = np.zeros((FLAGS.max_episode_len))
@@ -44,7 +45,11 @@ class Collector:
             print('episode: ', epsd)
             for step in tqdm(range(FLAGS.max_episode_len)):
                 policy_action, _ = self.policy(ob)
-                action = self.action_space[policy_action]
+                if np.random.choice(2, 1, p=[epsilon, 1 - epsilon]) == 0:
+                    random_action = np.random.choice(self.action_dims)
+                    action = self.action_space[random_action]
+                else:
+                    action = self.action_space[policy_action]
 
                 # print(action)
                 self.env.render()
@@ -61,6 +66,7 @@ class Collector:
                 ob = self.observation_update(new_ob, ob)
                 if done or step == FLAGS.max_episode_len - 1:
                     print(step)
+                    epsilon *= 0.99
                     for i in range(int(step / FLAGS.episode_len)):
                         self.states[epsd] = states[step - (i + 1) * FLAGS.episode_len:step - i * FLAGS.episode_len + 1]
                         self.actions[epsd] = actions[step - (i + 1) * FLAGS.episode_len:step - i * FLAGS.episode_len]
