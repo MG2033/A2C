@@ -53,7 +53,7 @@ class A2C:
             print("\n\nBuilding the model...")
             self.model.build()
             print("Model is built successfully\n\n")
-
+            print(A2CConfig.checkpoint_dir)
             latest_checkpoint = tf.train.latest_checkpoint(A2CConfig.checkpoint_dir)
             self.saver = tf.train.Saver(max_to_keep=A2CConfig.max_to_keep)
             if latest_checkpoint:
