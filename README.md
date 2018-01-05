@@ -24,6 +24,10 @@ This implementation allows for the beautiful Tensorboard visualization. It displ
 ```
 tensorboard --logdir=experiments/my_experiment/summaries
 ```
+<div align="center">
+<img src="https://github.com/MG2033/A2C/blob/master/figures/plot.png"><br><br>
+</div>
+
 ### Video Producing
 During training, you can generate videos of the trained agent playing the game. This is achieved by changing `record_video_every` in the configuration file from -1 to the number of episodes between two generated videos. Generated videos are in your experiment directory.
 
