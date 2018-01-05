@@ -49,6 +49,13 @@ The file 'test.json' is just an example of a file having all parameters to train
 
 In the project, two configuration files are provided as examples for training on Pong and Breakout Atari games.
 
+## Results
+
+| Model | Game | Average Score | Max Score |
+|-------|:----:|:-------------:||:---------:|
+| CNNPolicy | Pong | 20 | 21 |
+| CNNPolicy | Breakout | 700 | 850 |
+
 ## Updates
 * Inference and training are working properly.
 
