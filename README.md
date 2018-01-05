@@ -19,6 +19,16 @@ The methods that should be implemented in the new environment class are:
 ### Policy Models Supported
 This implementation comes with the basic CNN policy network from OpenAI baseline. However, it supports using different policy networks. All you have to do is to inherit from the base class `BasePolicy` in `models\base_policy.py`, and implement all the methods in a plug and play fashion again :D (See the CNNPolicy example class).
 
+### Tensorboard visualization
+This implementation allows for the beautiful Tensorboard visualization. It displays the time plots per running agent of the two most important signals in reinforcement learning: episode length and total reward in the episode. All you have to do is to launch Tensorboard from your experiment directory located in `experiments/`.
+```
+tensorboard --logdir=experiments/my_experiment/summaries
+```
+### Video Producing
+During training, you can generate videos of the trained agent playing the game. This is achieved by changing `record_video_every` in the configuration file from -1 to the number of episodes between two generated videos. Generated videos are in your experiment directory.
+
+During testing, videos are generated automatically if the optional `monitor` method is implemented in the environment.
+
 ## Usage
 ### Main Dependencies
  ```
