@@ -67,3 +67,6 @@ In the project, two configuration files are provided as examples for training on
 
 ## License
 This project is licensed under the Apache License 2.0 - see the LICENSE file for details.
+
+## Reference Repository
+[OpenAI Baselines](https://github.com/openai/baselines)
