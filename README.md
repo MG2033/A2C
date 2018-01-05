@@ -6,7 +6,7 @@ An implementation of `Synchronous Advantage Actor Critic (A2C)` in TensorFlow. A
 2. Support for different policy networks in an easier way.
 3. Support for environments other than OpenAI gym in an easy way.
 4. Support for video exporting per environment.
-5. Simple and easy code to modify and begin experimenting. All you need to do is a plug and play!
+5. Simple and easy code to modify and begin experimenting. All you need to do is plug and play!
 
 ## Asynchronous vs Synchronous Advantage Actor Critic
 Asynchronous advantage actor critic was introduced in [Asynchronous Methods for Deep Reinforcement Learning](https://arxiv.org/pdf/1602.01783.pdf). The difference between both methods is that in asynchronous AC, parallel agents update the global network each one on its own. So, at a certain time, the weights used by an agent maybe different than the weights used by another agent leading to the fact that each agent plays with a different policy to explore more and more of the environment. However, in synchronous AC, all of the updates by the parallel agents are collected to update the global network. To encourage exploration, stochastic noise is added to the probability distribution of the actions predicted by each agent.
