@@ -1,7 +1,7 @@
 # A2C
 An implementation of `Synchronous Advantage Actor Critic (A2C)` in TensorFlow. A2C is a variant of advantage actor critic introduced by [OpenAI in their published baselines](https://github.com/openai/baselines). However, these baselines are difficult to understand and modify. So, I made the A2C based on their implementation but in a clearer and simpler way.
 
-## What's new to OpenAI Baseline?
+### What's new to OpenAI Baseline?
 1. Support for Tensorboard visualization per running agent in an environment.
 2. Support for different policy networks in an easier way.
 3. Support for environments other than OpenAI gym in an easy way.
