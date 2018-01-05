@@ -2,6 +2,32 @@ import os
 import numpy as np
 import random
 import tensorflow as tf
+from bunch import Bunch
+import argparse
+import json
+
+def parse_args():
+    """
+    Parse the arguments of the program
+    :return: (config_args)
+    :rtype: tuple
+    """
+    # Create a parser
+    parser = argparse.ArgumentParser(description="A2C Tensorflow implementation")
+    parser.add_argument('--version', action='version', version='%(prog)s 0.0.1')
+    parser.add_argument('--config', default=None, type=str, help='Configuration file')
+
+    # Parse the arguments
+    args = parser.parse_args()
+
+    # parse the configurations from the config json file provided
+    with open(args.config, 'r') as config_file:
+        config_args_dict = json.load(config_file)
+    # convert the dictionary to a namespace using bunch lib
+    config_args = Bunch(config_args_dict)
+
+    print(config_args)
+    return config_args
 
 
 def create_dirs(dirs):
@@ -24,7 +50,7 @@ def create_experiment_dirs(exp_dir):
     :param exp_dir:
     :return summary_dir, checkpoint_dir:
     """
-    experiment_dir = os.path.realpath(os.path.join(os.path.dirname(__file__))) + "/experiments/" + exp_dir + "/"
+    experiment_dir = "experiments/" + exp_dir + "/"
     summary_dir = experiment_dir + 'summaries/'
     checkpoint_dir = experiment_dir + 'checkpoints/'
     output_dir = experiment_dir + 'output/'

@@ -1,48 +1,51 @@
-from gp.base.base_train import BaseTrainer
-from gp.utils.lr_decay import LearningRateDecay
-from gp.utils.utils import create_experiment_dirs, create_list_dirs
-import numpy as np
 import time
+
+import numpy as np
+from base_train import BaseTrainer
+from env_summary_logger import EnvSummaryLogger
+from utils.lr_decay import LearningRateDecay
+from utils.utils import create_list_dirs
 from tqdm import tqdm
-from gp.configs.a2c_config import A2CConfig
-from gp.a2c.bench.env_summary_logger import EnvSummaryLogger
-# import matplotlib.pyplot as plt
 
 
 class Trainer(BaseTrainer):
-    def __init__(self, sess, env, model, r_discount_factor=0.99,
-                 lr_decay_method='linear', FLAGS=None):
-        super().__init__(sess, model, None, A2CConfig, FLAGS)
-        self.train_policy = self.model.train_policy
-        self.step_policy = self.model.step_policy
+    def __init__(self, sess, model, r_discount_factor=0.99,
+                 lr_decay_method='linear', args=None):
+        super().__init__(sess, model, args)
         self.save_every = 20000
-        self.env = env
         self.sess = sess
         self.num_steps = self.model.num_steps
         self.cur_iteration = 0
         self.global_time_step = 0
+        self.observation_s = None
+        self.states = None
+        self.dones = None
+        self.env = None
 
-        self.states = self.step_policy.initial_state
-        self.dones = [False for _ in range(env.num_envs)]
-        self.train_input_shape = (self.model.train_batch_size, self.model.img_height, self.model.img_width,
-                                  self.model.num_classes * self.model.num_stack)
-
-        self.observation_s = np.zeros(
-            (env.num_envs, self.model.img_height, self.model.img_width, self.model.num_classes * self.model.num_stack),
-            dtype=np.uint8)
-        self.observation_s = self.__observation_update(env.reset(), self.observation_s)
+        self.num_iterations = int(self.args.num_iterations)
 
         self.gamma = r_discount_factor
-        self.num_iterations = int(self.config.num_iterations)
 
-        self.learning_rate_decayed = LearningRateDecay(v=self.config.learning_rate,
-                                                       nvalues=self.num_iterations * self.config.unroll_time_steps * self.config.num_envs,
+        self.learning_rate_decayed = LearningRateDecay(v=self.args.learning_rate,
+                                                       nvalues=self.num_iterations * self.args.unroll_time_steps * self.args.num_envs,
                                                        lr_decay_method=lr_decay_method)
 
         self.env_summary_logger = EnvSummaryLogger(sess,
-                                                   create_list_dirs(A2CConfig.summary_dir, 'env', A2CConfig.num_envs))
+                                                   create_list_dirs(self.args.summary_dir, 'env', self.args.num_envs))
 
-    def train(self):
+    def train(self, env):
+        self._init_model()
+        self._load_model()
+
+        self.env = env
+        self.observation_s = np.zeros(
+            (env.num_envs, self.model.img_height, self.model.img_width, self.model.num_classes * self.model.num_stack),
+            dtype=np.uint8)
+        self.observation_s = self.__observation_update(self.env.reset(), self.observation_s)
+
+        self.states = self.model.step_policy.initial_state
+        self.dones = [False for _ in range(self.env.num_envs)]
+
         tstart = time.time()
         loss_list = np.zeros(100, )
         policy_entropy_list = np.zeros(100, )
@@ -83,7 +86,10 @@ class Trainer(BaseTrainer):
         self.env.close()
 
     def test(self, total_timesteps, env):
-        states = self.step_policy.initial_state
+        self._init_model()
+        self._load_model()
+
+        states = self.model.step_policy.initial_state
 
         dones = [False for _ in range(env.num_envs)]
 
@@ -94,7 +100,7 @@ class Trainer(BaseTrainer):
         observation_s = self.__observation_update(env.reset(), observation_s)
 
         for _ in tqdm(range(total_timesteps)):
-            actions, values, states = self.step_policy.step(observation_s, states, dones)
+            actions, values, states = self.model.step_policy.step(observation_s, states, dones)
             observation, rewards, dones, _ = env.step(actions)
             for n, done in enumerate(dones):
                 if done:
@@ -107,7 +113,7 @@ class Trainer(BaseTrainer):
         advantages = rewards - values
         for step in range(len(observations)):
             current_learning_rate = self.learning_rate_decayed.value()
-        feed_dict = {self.train_policy.X_input: observations, self.model.actions: actions,
+        feed_dict = {self.model.train_policy.X_input: observations, self.model.actions: actions,
                      self.model.advantage: advantages,
                      self.model.reward: rewards, self.model.learning_rate: current_learning_rate,
                      self.model.is_training: True}
@@ -138,12 +144,15 @@ class Trainer(BaseTrainer):
         return discounted[::-1]
 
     def __rollout(self):
+        train_input_shape = (self.model.train_batch_size, self.model.img_height, self.model.img_width,
+                             self.model.num_classes * self.model.num_stack)
+
         mb_obs, mb_rewards, mb_actions, mb_values, mb_dones = [], [], [], [], []
         mb_states = self.states
 
         for n in range(self.num_steps):
             # Choose an action based on the current observation
-            actions, values, states = self.step_policy.step(self.observation_s, self.states, self.dones)
+            actions, values, states = self.model.step_policy.step(self.observation_s, self.states, self.dones)
 
             # Actions, Values predicted across all parallel environments
             mb_obs.append(np.copy(self.observation_s))
@@ -172,14 +181,14 @@ class Trainer(BaseTrainer):
         mb_dones.append(self.dones)
 
         # Conversion from (time_steps, num_envs) to (num_envs, time_steps)
-        mb_obs = np.asarray(mb_obs, dtype=np.uint8).swapaxes(1, 0).reshape(self.train_input_shape)
+        mb_obs = np.asarray(mb_obs, dtype=np.uint8).swapaxes(1, 0).reshape(train_input_shape)
         mb_rewards = np.asarray(mb_rewards, dtype=np.float32).swapaxes(1, 0)
         mb_actions = np.asarray(mb_actions, dtype=np.int32).swapaxes(1, 0)
         mb_values = np.asarray(mb_values, dtype=np.float32).swapaxes(1, 0)
         mb_dones = np.asarray(mb_dones, dtype=np.bool).swapaxes(1, 0)
         mb_masks = mb_dones[:, :-1]
         mb_dones = mb_dones[:, 1:]
-        last_values = self.step_policy.value(self.observation_s, self.states, self.dones).tolist()
+        last_values = self.model.step_policy.value(self.observation_s, self.states, self.dones).tolist()
 
         # Discount/bootstrap off value fn in all parallel environments
         for n, (rewards, dones, value) in enumerate(zip(mb_rewards, mb_dones, last_values)):

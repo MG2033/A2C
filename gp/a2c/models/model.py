@@ -1,19 +1,15 @@
 import tensorflow as tf
-from gp.layers.utils import mse, openai_entropy
-from gp.utils.utils import find_trainable_variables
-from gp.configs.a2c_config import A2CConfig
+from layers import mse, openai_entropy
+from utils.utils import find_trainable_variables
 
 
 class Model:
-    def __init__(self, sess, observation_space_params, num_actions,
+    def __init__(self, sess,
                  entropy_coef=0.01, value_function_coeff=0.5, max_gradient_norm=0.5,
-                 optimizer_params=None):
-        self.num_actions = num_actions
-        self.train_batch_size = A2CConfig.num_envs * A2CConfig.unroll_time_steps
-        self.num_steps = A2CConfig.unroll_time_steps
-        self.img_height, self.img_width, self.num_classes = observation_space_params
-
-        self.num_stack = A2CConfig.num_stack
+                 optimizer_params=None, args=None):
+        self.train_batch_size = args.num_envs * args.unroll_time_steps
+        self.num_steps = args.unroll_time_steps
+        self.num_stack = args.num_stack
         self.actions = None
         self.advantage = None
         self.reward = None
@@ -31,15 +27,25 @@ class Model:
         self.entropy = None
         self.loss = None
         self.learning_rate = None
-        self.policy = A2CConfig.policy_class
+        self.num_actions = None
+        self.img_height, self.img_width, self.num_classes = None, None, None
+
+        self.policy = Model.policy_name_parser(args.policy_class)
         self.sess = sess
         self.vf_coeff = value_function_coeff
         self.entropy_coeff = entropy_coef
         self.max_grad_norm = max_gradient_norm
+
         # RMSProp params = {'learning_rate': 7e-4, 'alpha': 0.99, 'epsilon': 1e-5}
         self.initial_learning_rate = optimizer_params['learning_rate']
         self.alpha = optimizer_params['alpha']
         self.epsilon = optimizer_params['epsilon']
+
+    def __set_action_space_params(self, num_actions):
+        self.num_actions = num_actions
+
+    def __set_observation_space_params(self, observation_space_params):
+        self.img_height, self.img_width, self.num_classes = observation_space_params
 
     def init_input(self):
         with tf.name_scope('input'):
@@ -84,6 +90,17 @@ class Model:
                                                   epsilon=self.epsilon)
             self.optimize = optimizer.apply_gradients(grads)
 
-    def build(self):
+    def build(self, observation_space_params, num_actions):
+        self.__set_observation_space_params(observation_space_params)
+        self.__set_action_space_params(num_actions)
         self.init_input()
         self.init_network()
+
+    @staticmethod
+    def policy_name_parser(policy_name):
+        from models.cnn_policy import CNNPolicy
+        policy_to_class = {'CNNPolicy': CNNPolicy}
+
+        if policy_name in policy_to_class:
+            return policy_to_class[policy_name]
+        raise ValueError("There is no policy with this name. Make sure that the policy exists.")

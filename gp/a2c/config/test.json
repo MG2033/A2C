@@ -1,0 +1,17 @@
+{
+  "num_envs": 4,
+  "env_class": "GymEnv",
+  "env_name": "PongNoFrameskip-v4",
+  "env_seed": 42,
+  "policy_class": "CNNPolicy",
+  "unroll_time_steps": 5,
+  "num_stack": 4,
+  "num_iterations": 4e6,
+  "learning_rate": 7e-4,
+  "reward_discount_factor": 0.99,
+  "max_to_keep": 4,
+  "experiment_dir": "experiment_pong",
+  "record_video_every": -1,
+  "to_train": true,
+  "to_test": true
+}

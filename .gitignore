@@ -105,6 +105,4 @@ ENV/
 # pycharm
 .idea/
 .pyc
-gp/a2c/experiments/
-gp/utils/experiments/
 experiments/

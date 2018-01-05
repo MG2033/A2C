@@ -1,5 +1,4 @@
 import tensorflow as tf
-from gp.configs.a2c_config import A2CConfig
 
 
 class EnvSummaryLogger:
@@ -13,6 +12,7 @@ class EnvSummaryLogger:
                                for i in range(len(summary_dirs))]
         self.summary_placeholders = {}
         self.summary_ops = {}
+        self.env_summary_tags = ['reward', 'episode_length']
         self.init_summaries()
 
     def init_summaries(self):
@@ -21,7 +21,7 @@ class EnvSummaryLogger:
         :return:
         """
         with tf.variable_scope('env-train-summaries'):
-            for tag in A2CConfig.env_summary_tags:
+            for tag in self.env_summary_tags:
                 self.summary_placeholders[tag] = tf.placeholder('float32', None, name=tag)
                 self.summary_ops[tag] = tf.summary.scalar(tag, self.summary_placeholders[tag])
 
