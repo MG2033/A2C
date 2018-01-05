@@ -1,5 +1,5 @@
 # A2C
-An implementation of `Synchronous Advantage Actor Critic (A2C)` in TensorFlow. A2C is a variant of advantage actor critic introduced by [OpenAI in their published baselines](https://github.com/openai/baselines). However, these baselines are difficult to understand and modify. So, I implemented the A2C based on their implementation but in a clearer and simpler way.
+An implementation of `Synchronous Advantage Actor Critic (A2C)` in TensorFlow. A2C is a variant of advantage actor critic introduced by [OpenAI in their published baselines](https://github.com/openai/baselines). However, these baselines are difficult to understand and modify. So, I made the A2C based on their implementation but in a clearer and simpler way.
 
 
 ## Asynchronous vs Synchronous Advantage Actor Critic
