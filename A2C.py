@@ -5,7 +5,6 @@ from train import Trainer
 from utils.utils import set_all_global_seeds
 
 
-
 class A2C:
     def __init__(self, sess, args):
         self.args = args
@@ -28,9 +27,13 @@ class A2C:
 
         print('Training...')
         try:
-            if self.args.record_video_every != -1:
-                env.monitor(is_monitor=True, is_train=True, experiment_dir=self.args.experiment_dir,
-                            record_video_every=self.args.record_video_every)
+            # Produce video only if monitor method is implemented.
+            try:
+                if self.args.record_video_every != -1:
+                    env.monitor(is_monitor=True, is_train=True, experiment_dir=self.args.experiment_dir,
+                                record_video_every=self.args.record_video_every)
+            except:
+                pass
             self.trainer.train(env)
         except KeyboardInterrupt:
             print('Error occured..\n')
@@ -54,12 +57,16 @@ class A2C:
 
         print('Testing...')
         try:
-            if self.args.record_video_every != -1:
-                env.monitor(is_monitor=True, is_train=False, experiment_dir=self.args.experiment_dir,
-                            record_video_every=self.args.record_video_every)
-            else:
-                env.monitor(is_monitor=True, is_train=False, experiment_dir=self.args.experiment_dir,
-                            record_video_every=20)
+            # Produce video only if monitor method is implemented.
+            try:
+                if self.args.record_video_every != -1:
+                    env.monitor(is_monitor=True, is_train=False, experiment_dir=self.args.experiment_dir,
+                                record_video_every=self.args.record_video_every)
+                else:
+                    env.monitor(is_monitor=True, is_train=False, experiment_dir=self.args.experiment_dir,
+                                record_video_every=20)
+            except:
+                pass
             self.trainer.test(total_timesteps=total_timesteps, env=env)
         except KeyboardInterrupt:
             print('Error occured..\n')
