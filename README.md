@@ -1,46 +1,53 @@
-# MobileNet
-An implementation of `Synchronous Advantage Actor Critic (A2C)` introduced in TensorFlow. A2C is a variant of advantage actor critic introduced by [OpenAI in their published baselines](https://github.com/openai/baselines). However, these baselines are difficult to understand and modify. So, I implemented the A2C based on their implementation but in a clearer and simpler way.
+# A2C
+An implementation of `Synchronous Advantage Actor Critic (A2C)` in TensorFlow. A2C is a variant of advantage actor critic introduced by [OpenAI in their published baselines](https://github.com/openai/baselines). However, these baselines are difficult to understand and modify. So, I implemented the A2C based on their implementation but in a clearer and simpler way.
 
 
-## Depthwise Separable Convolution
-<div align="center">
-<img src="https://github.com/MG2033/MobileNet/blob/master/figures/dws.png"><br><br>
-</div>
+## Asynchronous vs Synchronous Advantage Actor Critic
+Asynchronous advantage actor critic was introduced in [Asynchronous Methods for Deep Reinforcement Learning](https://arxiv.org/pdf/1602.01783.pdf). The difference between both methods is that in asynchronous AC, parallel agents update the global network each one on its own. So, at a certain time, the weights used by an agent maybe different than the weights used by another agent leading to the fact that each agent plays with a different policy to explore more and more of the environment. However, in synchronous AC, all of the updates by the parallel agents are collected to update the global network. To encourage exploration, stochastic noise is added to the probability distribution of the actions predicted by each agent.
 
-## ReLU6
-The paper uses ReLU6 as an activation function. ReLU6 was first introduced in [Convolutional Deep Belief Networks on CIFAR-10](https://www.cs.toronto.edu/~kriz/conv-cifar10-aug2010.pdf) as a ReLU with clipping its output at 6.0.
+### Environments Supported
+This implementation allows for using different environments. It's not restricted to OpenAI gym environments. If you want to attach the project to another environment rather than that provided by gym, all you have to do is to inherit from the base class `BaseEnv` in `envs/base_env.py`, and implement all the methods in a plug and play fashion (See the gym environment example class). You also have to add the name of the new environment class in `A2C.py\env_name_parser()` method.
+
+The methods that should be implemented in the new environment class are: 
+1. `make()` for creating the environment and returning a reference to it.
+2. `step()` for taking a step in the environment and returning a tuple (observation images, reward float value, done boolean, any other info).
+3. `reset()` for resetting the environment to the initial state.
+4. `get_observation_space()` for returning an object with attribute tuple `shape` representing the shape of the observation space.
+5. `get_action_space()` for returing an object with attribute tuple `n` representing the number of possible actions in the environment.
+6. `render()` for rendering the environment if appropriate.
+
+### Policy Models Supported
+This implementation comes with the basic CNN policy network from OpenAI baseline. However, it supports using different policy networks. All you have to do is to inherit from the base class `BasePolicy` in `models\base_policy.py`, and implement all the methods in a plug and play fashion again :D (See the CNNPolicy example class).
+
+### Tensorboard Visualization
+This implementation allows for the beautiful Tensorboard visualization. It displays the time plots per running agent of the two most important signals in reinforcement learning: episode length and total reward in the episode. All you have to do is to launch Tensorboard from your experiment directory located in `experiments/`.
+```
+tensorboard --logdir=experiments/my_experiment/summaries
+```
+### Video Producing
+During training, you can generate videos of the trained agent playing the game. This is achieved by changing `record_video_every` in the configuration file from -1 to the number of episodes between two generated videos. Generated videos are in your experiment directory.
+
+During testing, videos are generated automatically if the optional `monitor` method is implemented in the environment.
 
 ## Usage
 ### Main Dependencies
  ```
+ Python 3 or above
  tensorflow 1.3.0
  numpy 1.13.1
+ gym 0.9.2
  tqdm 4.15.0
  bunch 1.0.1
  matplotlib 2.0.2
+ Pillow 4.2.1
  ```
-### Train and Test
-1. Prepare your data, and modify the data_loader.py/DataLoader/load_data() method.
-2. Modify the config/test.json to meet your needs.
-
-Note: If you want to test that the model is pretrained and working properly, I've added some test images from different classes in directory 'data/test_images'. All of them are classified correctly.
-
 ### Run
 ```
 python main.py config/test.json
 ```
-The file 'test.json' is just an example of a file. If you run it as is, it will test the model against the images in directory 'data/test_images'. You can create your own configuration file for training/testing.
+The file 'test.json' is just an example of a file having all parameters to train on environments. You can create your own configuration file for training/testing.
 
-## Benchmarking
-The paper has achieved 569 Mult-Adds. In my implementation, I have achieved approximately 1140 MFLOPS. The paper counts multiplication+addition as one unit. My result verifies the paper as roughly dividing 1140 by 2 is equal to 569 unit.
-
-To calculate the FLOPs in TensorFlow, make sure to set the batch size equal to 1, and execute the following line when the model is loaded into memory.
-```
-tf.profiler.profile(
-        tf.get_default_graph(),
-        options=tf.profiler.ProfileOptionBuilder.float_operation(), cmd='scope')
-```
-I've already implemented this function. It's called ```calculate_flops()``` in `utils.py`. Use it directly if you want.
+In the project, two configuration files are provided as examples for training on Pong and Breakout Atari games.
 
 ## Updates
 * Inference and training are working properly.
