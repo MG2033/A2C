@@ -4,6 +4,9 @@ An implementation of `Synchronous Advantage Actor Critic (A2C)` in TensorFlow. A
 
 ## Asynchronous vs Synchronous Advantage Actor Critic
 Asynchronous advantage actor critic was introduced in [Asynchronous Methods for Deep Reinforcement Learning](https://arxiv.org/pdf/1602.01783.pdf). The difference between both methods is that in asynchronous AC, parallel agents update the global network each one on its own. So, at a certain time, the weights used by an agent maybe different than the weights used by another agent leading to the fact that each agent plays with a different policy to explore more and more of the environment. However, in synchronous AC, all of the updates by the parallel agents are collected to update the global network. To encourage exploration, stochastic noise is added to the probability distribution of the actions predicted by each agent.
+<div align="center">
+<img src="https://github.com/MG2033/A2C/blob/master/figures/a3c_vs_a2c.png"><br><br>
+</div>
 
 ### Environments Supported
 This implementation allows for using different environments. It's not restricted to OpenAI gym environments. If you want to attach the project to another environment rather than that provided by gym, all you have to do is to inherit from the base class `BaseEnv` in `envs/base_env.py`, and implement all the methods in a plug and play fashion (See the gym environment example class). You also have to add the name of the new environment class in `A2C.py\env_name_parser()` method.
@@ -24,6 +27,10 @@ This implementation allows for the beautiful Tensorboard visualization. It displ
 ```
 tensorboard --logdir=experiments/my_experiment/summaries
 ```
+<div align="center">
+<img src="https://github.com/MG2033/A2C/blob/master/figures/plot.png"><br><br>
+</div>
+
 ### Video Producing
 During training, you can generate videos of the trained agent playing the game. This is achieved by changing `record_video_every` in the configuration file from -1 to the number of episodes between two generated videos. Generated videos are in your experiment directory.
 
