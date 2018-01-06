@@ -38,7 +38,7 @@ tensorboard --logdir=experiments/my_experiment/summaries
 </div>
 
 ### Video Generation
-During training, you can generate videos of the trained agent playing the game. This is achieved by changing `record_video_every` in the configuration file from -1 to the number of episodes between two generated videos. Generated videos are in your experiment directory.
+During training, you can generate videos of the trained agent acting (playing) in the environment. This is achieved by changing `record_video_every` in the configuration file from -1 to the number of episodes between two generated videos. Videos are generated in your experiment directory.
 
 During testing, videos are generated automatically if the optional `monitor` method is implemented in the environment. As for the gym included environment, it's already been implemented.
 
