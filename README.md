@@ -17,7 +17,7 @@ Asynchronous advantage actor critic was introduced in [Asynchronous Methods for 
 ### Environments Supported
 This implementation allows for using different environments. It's not restricted to OpenAI gym environments. If you want to attach the project to another environment rather than that provided by gym, all you have to do is to inherit from the base class `BaseEnv` in `envs/base_env.py`, and implement all the methods in a plug and play fashion (See the gym environment example class). You also have to add the name of the new environment class in `A2C.py\env_name_parser()` method.
 
-The methods that should be implemented in the new environment class are: 
+The methods that should be implemented in a new environment class are: 
 1. `make()` for creating the environment and returning a reference to it.
 2. `step()` for taking a step in the environment and returning a tuple (observation images, reward float value, done boolean, any other info).
 3. `reset()` for resetting the environment to the initial state.
