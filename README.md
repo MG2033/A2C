@@ -26,7 +26,7 @@ The methods that should be implemented in a new environment class are:
 6. `render()` for rendering the environment if appropriate.
 
 ### Policy Networks Supported
-This implementation comes with the basic CNN policy network from OpenAI baseline. However, it supports using different policy networks. All you have to do is to inherit from the base class `BasePolicy` in `models\base_policy.py`, and implement all the methods in a plug and play fashion again :D (See the CNNPolicy example class).
+This implementation comes with the basic CNN policy network from OpenAI baseline. However, it supports using different policy networks. All you have to do is to inherit from the base class `BasePolicy` in `models\base_policy.py`, and implement all the methods in a plug and play fashion again :D (See the CNNPolicy example class). You also have to add the name of the new policy network class in `models\model.py\policy_name_parser()` method.
 
 ### Tensorboard Visualization
 This implementation allows for the beautiful Tensorboard visualization. It displays the time plots per running agent of the two most important signals in reinforcement learning: episode length and total reward in the episode. All you have to do is to launch Tensorboard from your experiment directory located in `experiments/`.
