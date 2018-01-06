@@ -25,7 +25,7 @@ The methods that should be implemented in the new environment class are:
 5. `get_action_space()` for returing an object with attribute tuple `n` representing the number of possible actions in the environment.
 6. `render()` for rendering the environment if appropriate.
 
-### Policy Models Supported
+### Policy Networks Supported
 This implementation comes with the basic CNN policy network from OpenAI baseline. However, it supports using different policy networks. All you have to do is to inherit from the base class `BasePolicy` in `models\base_policy.py`, and implement all the methods in a plug and play fashion again :D (See the CNNPolicy example class).
 
 ### Tensorboard Visualization
