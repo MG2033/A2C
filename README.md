@@ -5,7 +5,7 @@ An implementation of `Synchronous Advantage Actor Critic (A2C)` in TensorFlow. A
 1. Support for Tensorboard visualization per running agent in an environment.
 2. Support for different policy networks in an easier way.
 3. Support for environments other than OpenAI gym in an easy way.
-4. Support for video exporting per environment.
+4. Support for video generation of an agent acting in the environment.
 5. Simple and easy code to modify and begin experimenting. All you need to do is plug and play!
 
 ## Asynchronous vs Synchronous Advantage Actor Critic
