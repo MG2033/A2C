@@ -22,7 +22,7 @@ The methods that should be implemented in a new environment class are:
 2. `step()` for taking a step in the environment and returning a tuple (observation images, reward float value, done boolean, any other info).
 3. `reset()` for resetting the environment to the initial state.
 4. `get_observation_space()` for returning an object with attribute tuple `shape` representing the shape of the observation space.
-5. `get_action_space()` for returing an object with attribute tuple `n` representing the number of possible actions in the environment.
+5. `get_action_space()` for returning an object with attribute `n` representing the number of possible actions in the environment.
 6. `render()` for rendering the environment if appropriate.
 
 ### Policy Networks Supported
