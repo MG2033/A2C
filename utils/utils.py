@@ -6,6 +6,11 @@ from bunch import Bunch
 import argparse
 import json
 
+
+class Bunch(object):
+    def __init__(self, adict):
+        self.__dict__.update(adict)
+
 def parse_args():
     """
     Parse the arguments of the program
