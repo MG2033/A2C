@@ -6,12 +6,7 @@ from A2C import A2C
 
 def main():
     # Parse the JSON arguments
-    config_args = None
-    try:
-        config_args = parse_args()
-    except:
-        print("Add a config file using \'--config file_name.json\'")
-        exit(1)
+    config_args = parse_args()
 
     tf.reset_default_graph()
 
