@@ -10,12 +10,6 @@ class BaseTrainer:
         self.summary_placeholders = {}
         self.summary_ops = {}
 
-        # init the global step, global time step, the current epoch and the summaries
-        self.__init_global_step()
-        self.__init_global_time_step()
-        self.__init_cur_epoch()
-        self.__init_global_saver()
-
     def save(self):
         print("Saving model...")
         self.saver.save(self.sess, self.args.checkpoint_dir, self.global_step_tensor)
@@ -35,6 +29,11 @@ class BaseTrainer:
         self.summary_writer = tf.summary.FileWriter(self.args.summary_dir, self.sess.graph)
 
     def _init_model(self):
+        # init the global step, global time step, the current epoch and the summaries
+        self.__init_global_step()
+        self.__init_global_time_step()
+        self.__init_cur_epoch()
+        self.__init_global_saver()
         self.init = tf.group(tf.global_variables_initializer(), tf.local_variables_initializer())
         self.sess.run(self.init)
 
