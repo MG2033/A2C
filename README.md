@@ -56,7 +56,7 @@ During testing, videos are generated automatically if the optional `monitor` met
  ```
 ### Run
 ```
-python main.py config/test.json
+python main.py --config config/test.json
 ```
 The file 'test.json' is just an example of a file having all parameters to train on environments. You can create your own configuration file for training/testing.
 
