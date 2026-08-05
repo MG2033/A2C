@@ -36,7 +36,7 @@ class A2C:
                 pass
             self.trainer.train(env)
         except KeyboardInterrupt:
-            print('Error occured..\n')
+            print('Error occurred..\n')
             self.trainer.save()
             env.close()
 
@@ -69,7 +69,7 @@ class A2C:
                 pass
             self.trainer.test(total_timesteps=total_timesteps, env=env)
         except KeyboardInterrupt:
-            print('Error occured..\n')
+            print('Error occurred..\n')
             env.close()
 
     def infer(self, observation):
